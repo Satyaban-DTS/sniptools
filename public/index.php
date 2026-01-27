@@ -12,8 +12,8 @@ require_once __DIR__ . '/../config/tools.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/db.php'; // DB Connection
 
-// 1. Load Settings & Tools from DB
-$settingsRaw = $pdo->query("SELECT * FROM settings")->fetchAll();
+// 1. Load Essential Settings from DB
+$settingsRaw = $pdo->query("SELECT `key`, value FROM settings WHERE `key` IN ('site_name', 'ads_enabled', 'maintenance_mode', 'ad_code_head')")->fetchAll();
 $settings = [];
 foreach ($settingsRaw as $s)
     $settings[$s['key']] = $s['value'];
@@ -32,9 +32,8 @@ $pdo->prepare("INSERT INTO visits (page, ip_hash) VALUES (?, ?)")
     ->execute([$page, md5($_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT'])]);
 
 
-// 3. Load Tools for Routing/Display
-// Overwrite the static array from config/tools.php with DB data
-$toolsDB = $pdo->query("SELECT * FROM tools WHERE is_active = 1")->fetchAll();
+// 3. Load Active Tools for Routing/Display
+$toolsDB = $pdo->query("SELECT id, slug, name, description, icon, category_id FROM tools WHERE is_active = 1")->fetchAll();
 $tools = [];
 foreach ($toolsDB as $t) {
     $tools[$t['slug']] = [
@@ -42,8 +41,7 @@ foreach ($toolsDB as $t) {
         'name' => $t['name'],
         'desc' => $t['description'],
         'icon' => $t['icon'],
-        'category' => $t['category_id'],
-        'tip' => 'Tip from DB: ' . $t['name'] . ' is useful.'
+        'category' => $t['category_id']
     ];
 }
 // Also load categories from DB for sidebar
