@@ -1,0 +1,14 @@
+# web/public/.htaccess
+
+RewriteEngine On
+
+# Ensure the request isn't a directory or file
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# SEO Files
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+RewriteRule ^robots\.txt$ robots.php [L]
+
+# Route everything to index.php if not found
+RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]

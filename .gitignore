@@ -1,0 +1,9 @@
+# SnipTools Git Ignore
+.DS_Store
+.vscode
+database.sqlite
+full_backup.sql
+Archive.zip
+node_modules/
+scripts/php_backup.php
+config/config.php.local
