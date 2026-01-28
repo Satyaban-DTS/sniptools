@@ -1,5 +1,6 @@
 <?php
 // web/views/admin/profile.php
+$unreadFeedbackCount = $pdo->query("SELECT COUNT(*) FROM feedback WHERE status = 'new'")->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -7,11 +8,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Profile -
-        <?php echo APP_NAME; ?>
-    </title>
+    <title>Admin Profile - <?php echo APP_NAME; ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php include_once __DIR__ . '/../../includes/toast_provider.php'; ?>
 </head>
 
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -19,15 +19,35 @@
     <!-- Top Bar -->
     <header class="bg-gray-800 border-b border-gray-700 h-16 flex items-center justify-between px-8 sticky top-0 z-50">
         <div class="flex items-center space-x-4">
-            <a href="<?php echo url('admin/dashboard'); ?>" class="flex items-center space-x-4 group">
+            <a href="<?php echo url('admin'); ?>" class="flex items-center space-x-3 group">
                 <div
-                    class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center group-hover:bg-purple-500 transition-colors">
-                    <i class="fas fa-arrow-left text-white"></i>
+                    class="w-9 h-9 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/20 group-hover:scale-105 transition-transform">
+                    <i class="fas fa-bolt text-white"></i>
                 </div>
-                <span class="font-bold text-lg tracking-tight">Back to Dashboard</span>
+                <span class="font-bold text-lg tracking-tight">Admin<span class="text-gray-500">Panel</span></span>
             </a>
         </div>
         <div class="flex items-center space-x-6">
+            <a href="<?php echo url(); ?>" target="_blank"
+                class="text-sm font-bold text-gray-400 hover:text-white transition-colors">
+                View Site <i class="fas fa-external-link-alt ml-1"></i>
+            </a>
+            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
+            <a href="<?php echo url('admin/feedback'); ?>"
+                class="relative text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center">
+                Feedback
+                <?php if (($unreadFeedbackCount ?? 0) > 0): ?>
+                    <span
+                        class="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white animate-pulse">
+                        <?php echo $unreadFeedbackCount; ?>
+                    </span>
+                <?php endif; ?>
+            </a>
+            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
+            <a href="<?php echo url('admin/profile'); ?>" class="text-sm font-bold text-white transition-colors">
+                Profile
+            </a>
+            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
             <a href="<?php echo url('admin/logout'); ?>"
                 class="text-sm font-bold text-red-400 hover:text-red-300 transition-colors">
                 Logout

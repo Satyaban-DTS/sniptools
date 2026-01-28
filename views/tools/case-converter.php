@@ -101,6 +101,7 @@
         const btn = document.getElementById('copyBtn');
         input.select();
         document.execCommand('copy');
+        showToast("Copied to clipboard!");
 
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';

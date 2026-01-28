@@ -3,6 +3,7 @@
 include __DIR__ . '/../includes/header.php';
 include __DIR__ . '/../includes/sidebar.php';
 
+$categorySlug = $categorySlug ?? 'developer'; // Fallback or handle error
 $catTools = array_filter($tools, function ($t) use ($categorySlug) {
     return isset($t['category']) && $t['category'] === $categorySlug;
 });
@@ -13,7 +14,7 @@ $catTools = array_filter($tools, function ($t) use ($categorySlug) {
         <!-- Breadcrumbs -->
         <nav
             class="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-8 px-2">
-            <a href="<?php echo url(); ?>" class="hover:text-primary transition-colors">Tools</a>
+            <a href="<?php echo url('tools'); ?>" class="hover:text-primary transition-colors">Tools</a>
             <i class="fas fa-chevron-right text-[8px] opacity-30"></i>
             <span class="text-secondary dark:text-white">
                 <?php echo $pageTitle; ?>
@@ -48,6 +49,7 @@ $catTools = array_filter($tools, function ($t) use ($categorySlug) {
             <?php endforeach; ?>
         </div>
     </div>
+    <?php include __DIR__ . '/../includes/visual_footer.php'; ?>
 </main>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

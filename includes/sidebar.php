@@ -61,20 +61,34 @@ $inactiveIcon = 'text-gray-400 group-hover:text-primary';
                 </a>
             </div>
 
-            <!-- Suggestion / Popular Tools -->
-            <div>
-                <p
-                    class="sidebar-expand-only px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-3 opacity-40">
-                    Popular Tools</p>
-                <div class="space-y-1">
-                    <a href="<?php echo getToolUrl('json-formatter', $tools['json-formatter']); ?>"
-                        class="flex items-center px-4 py-2.5 text-xs font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl group transition-all">
-                        <i
-                            class="fas fa-bolt w-6 text-center mr-4 text-primary/40 group-hover:text-primary transition-colors"></i>
-                        <span class="sidebar-expand-only">JSON Formatter</span>
-                    </a>
+            <!-- Recent Tools (Session Based) -->
+            <?php
+            if (session_status() === PHP_SESSION_NONE) {
+                @session_start();
+            }
+            $recentSlugs = $_SESSION['recent_tools'] ?? [];
+            if (!empty($recentSlugs)):
+                ?>
+                <div>
+                    <p
+                        class="sidebar-expand-only px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-3 opacity-40">
+                        Recent Tools</p>
+                    <div class="space-y-1">
+                        <?php foreach ($recentSlugs as $slug):
+                            if (!isset($tools[$slug]))
+                                continue;
+                            $t = $tools[$slug];
+                            ?>
+                            <a href="<?php echo getToolUrl($slug, $t); ?>"
+                                class="flex items-center px-4 py-2.5 text-xs font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl group transition-all">
+                                <i
+                                    class="fas <?php echo $t['icon']; ?> w-6 text-center mr-4 text-primary/40 group-hover:text-primary transition-colors"></i>
+                                <span class="sidebar-expand-only line-clamp-1"><?php echo $t['name']; ?></span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
-            </div>
+            <?php endif; ?>
 
             <!-- Categories Group -->
             <div>

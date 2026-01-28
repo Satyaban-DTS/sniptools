@@ -101,6 +101,7 @@
     function copyAll() {
         wordInput.select();
         document.execCommand('copy');
+        showToast("Copied to clipboard!");
     }
 
     wordInput.addEventListener('input', updateAll);

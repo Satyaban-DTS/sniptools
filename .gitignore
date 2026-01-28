@@ -3,6 +3,7 @@
 .vscode
 database.sqlite
 full_backup.sql
+schema.sql
 Archive.zip
 node_modules/
 scripts/php_backup.php

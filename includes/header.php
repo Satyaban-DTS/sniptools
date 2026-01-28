@@ -80,7 +80,6 @@
             background: rgba(255, 255, 255, 0.05);
         }
     </style>
-    </style>
     <?php
     // Inject Head Script if enabled
     // We assume $pdo is available or we fetch it. 
@@ -92,6 +91,7 @@
         echo $settings['ad_code_head'];
     }
     ?>
+    <?php include_once __DIR__ . '/toast_provider.php'; ?>
 </head>
 
 <body

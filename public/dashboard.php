@@ -7,11 +7,11 @@ include __DIR__ . '/../includes/sidebar.php';
 // Reuse the existing dashboard content from the previous index.php
 ?>
 
-<main class="flex-1 overflow-y-auto bg-[#f8f9fc] dark:bg-[#0f111a] p-8 lg:p-12 custom-scrollbar">
+<main class="flex-1 overflow-y-auto bg-[#f8f9fc] dark:bg-[#0f111a] p-6 lg:p-8 custom-scrollbar">
     <div class="max-w-7xl mx-auto">
         <!-- Hero Section -->
         <div
-            class="mb-14 relative group overflow-hidden bg-gradient-to-r from-secondary to-[#2d1b4e] rounded-[2.5rem] p-10 lg:px-16 lg:py-16 text-white shadow-2xl">
+            class="mb-8 relative group overflow-hidden bg-gradient-to-r from-secondary to-[#2d1b4e] rounded-[2.5rem] p-8 lg:px-12 lg:py-10 text-white shadow-2xl">
             <div
                 class="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -mr-40 -mt-40 group-hover:bg-primary/30 transition-all duration-700">
             </div>
@@ -22,12 +22,12 @@ include __DIR__ . '/../includes/sidebar.php';
                     <span class="text-[10px] font-black uppercase tracking-widest text-gray-300">Phase 2: Live
                         Tools</span>
                 </div>
-                <h1 class="text-4xl lg:text-6xl font-black mb-6 leading-[1.1] tracking-tighter">
+                <h1 class="text-3xl lg:text-5xl font-black mb-4 leading-[1.1] tracking-tighter">
                     Built for speed. <br>
                     Designed for <span
                         class="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent italic">Security.</span>
                 </h1>
-                <p class="text-gray-400 text-lg mb-10 leading-relaxed max-w-xl">
+                <p class="text-gray-400 text-base mb-8 leading-relaxed max-w-xl">
                     High-performance developer tools with clean URLs and encrypted data paths. Open-source, robust, and
                     completely free.
                 </p>
@@ -62,7 +62,7 @@ include __DIR__ . '/../includes/sidebar.php';
                 developers</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
             <?php foreach ($categories as $catId => $catName): ?>
                 <?php
                 $count = count(array_filter($tools, function ($t) use ($catId) {
@@ -75,6 +75,7 @@ include __DIR__ . '/../includes/sidebar.php';
                 $catIcon = 'fa-folder';
                 $catColor = 'text-primary';
                 $catBg = 'bg-primary/5';
+                $color = 'primary'; // Default color
                 if ($catId === 'text') {
                     $catIcon = 'fa-font';
                     $catColor = 'text-fuchsia-500';
@@ -98,7 +99,7 @@ include __DIR__ . '/../includes/sidebar.php';
                 }
                 ?>
                 <a href="<?php echo url('tools/' . $catId); ?>"
-                    class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 border border-gray-100 dark:border-gray-700/50 shadow-lg shadow-gray-200/50 dark:shadow-none hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 flex flex-col items-start justify-between min-h-[220px] overflow-hidden">
+                    class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-6 border border-gray-100 dark:border-gray-700/50 shadow-lg shadow-gray-200/50 dark:shadow-none hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 flex flex-col items-start justify-between min-h-[180px] overflow-hidden">
 
                     <div
                         class="absolute top-0 right-0 w-32 h-32 bg-<?php echo $color; ?>-500/5 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-<?php echo $color; ?>-500/10 transition-colors">
@@ -136,6 +137,8 @@ include __DIR__ . '/../includes/sidebar.php';
             ?>
         </div>
     </div>
+
+    <?php include __DIR__ . '/../includes/visual_footer.php'; ?>
 </main>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

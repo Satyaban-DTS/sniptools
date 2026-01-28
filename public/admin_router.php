@@ -16,6 +16,12 @@ if ($subRoute === 'login') {
     exit;
 }
 
+// 6. Feedback Management
+if ($subRoute === 'feedback') {
+    include __DIR__ . '/../views/admin/feedback.php'; // We will create this
+    exit;
+}
+
 if ($subRoute === 'logout') {
     require_once __DIR__ . '/../includes/auth.php';
     logoutAdmin();
@@ -53,30 +59,29 @@ if ($subRoute === 'password-update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $uData = $stmt->fetch();
 
     if (!$uData || !password_verify($currentPass, $uData['password_hash'])) {
-        $error = "Incorrect current password.";
-        include __DIR__ . '/../views/admin/profile.php';
+        set_flash_message("Incorrect current password.", "error");
+        header("Location: " . url('admin/profile'));
         exit;
     }
 
     if ($newPass !== $confirmPass) {
-        $error = "New passwords do not match.";
-        include __DIR__ . '/../views/admin/profile.php';
+        set_flash_message("New passwords do not match.", "error");
+        header("Location: " . url('admin/profile'));
         exit;
     }
 
     if (strlen($newPass) < 6) {
-        $error = "Password must be at least 6 characters.";
-        include __DIR__ . '/../views/admin/profile.php';
+        set_flash_message("Password must be at least 6 characters.", "error");
+        header("Location: " . url('admin/profile'));
         exit;
     }
 
-    // Update
     $newHash = password_hash($newPass, PASSWORD_BCRYPT);
     $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE username = ?");
     $stmt->execute([$newHash, $user]);
 
-    $success = "Password updated successfully.";
-    include __DIR__ . '/../views/admin/profile.php';
+    set_flash_message("Password updated successfully.");
+    header("Location: " . url('admin/profile'));
     exit;
 }
 

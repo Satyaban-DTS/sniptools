@@ -65,3 +65,31 @@ function getRoute()
 
     return trim($uri, '/');
 }
+
+/**
+ * Set flash message to session
+ */
+function set_flash_message($message, $type = 'success')
+{
+    if (session_status() === PHP_SESSION_NONE)
+        session_start();
+    $_SESSION['flash_message'] = [
+        'message' => $message,
+        'type' => $type
+    ];
+}
+
+/**
+ * Get flash message from session
+ */
+function get_flash_message()
+{
+    if (session_status() === PHP_SESSION_NONE)
+        session_start();
+    if (isset($_SESSION['flash_message'])) {
+        $flash = $_SESSION['flash_message'];
+        unset($_SESSION['flash_message']);
+        return $flash;
+    }
+    return null;
+}

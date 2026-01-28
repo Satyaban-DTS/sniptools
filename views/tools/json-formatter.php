@@ -76,17 +76,25 @@
     }
 
     function formatJson(spaces) {
-        if (!validate()) return;
+        if (!validate()) {
+            showToast("Invalid JSON structure", "error");
+            return;
+        }
         const val = jsonInput.value;
         if (!val.trim()) return;
         jsonInput.value = JSON.stringify(JSON.parse(val), null, spaces);
+        showToast("JSON Beautified!");
     }
 
     function minifyJson() {
-        if (!validate()) return;
+        if (!validate()) {
+            showToast("Invalid JSON structure", "error");
+            return;
+        }
         const val = jsonInput.value;
         if (!val.trim()) return;
         jsonInput.value = JSON.stringify(JSON.parse(val));
+        showToast("JSON Minified!");
     }
 
     function clearJson() {
@@ -95,8 +103,10 @@
     }
 
     function copyJson() {
+        if (!jsonInput.value.trim()) return;
         jsonInput.select();
         document.execCommand('copy');
+        showToast("Copied to clipboard!");
 
         const btn = document.getElementById('jsonCopyBtn');
         const original = btn.innerHTML;

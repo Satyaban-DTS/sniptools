@@ -1,5 +1,18 @@
 <?php
 // web/public/index.php
+// Start Session Global
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Support for PHP built-in server
+if (php_sapi_name() === 'cli-server') {
+    $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $file = __DIR__ . $url;
+    if (is_file($file)) {
+        return false;
+    }
+}
 require_once __DIR__ . '/../config/config.php';
 
 $route = getRoute(); // From functions.php
@@ -90,6 +103,18 @@ if ($route === 'support') {
     exit;
 }
 
+// 4. Static Pages (About, Privacy, Terms)
+if (in_array($route, ['about', 'privacy', 'terms'])) {
+    $pageTitle = ucfirst($route);
+    if ($route === 'privacy')
+        $pageTitle = 'Privacy Policy';
+    if ($route === 'terms')
+        $pageTitle = 'Terms of Service';
+
+    include __DIR__ . '/../views/' . $route . '.php';
+    exit;
+}
+
 // 2. Nested Tool Routes (/tools/text/word-counter)
 if ($routeParts[0] === 'tools' && isset($routeParts[1]) && isset($routeParts[2])) {
     $catSlug = $routeParts[1];
@@ -101,7 +126,7 @@ if ($routeParts[0] === 'tools' && isset($routeParts[1]) && isset($routeParts[2])
         $toolName = $tool['name'];
         $toolIcon = $tool['icon'];
         $toolDescription = $tool['desc'];
-        $toolTip = $tool['tip'];
+        $toolTip = $tool['tip'] ?? 'Tip: This tool runs 100% in your browser for maximum privacy.';
         $toolCategory = $categories[$catSlug] ?? $catSlug;
         $toolCategorySlug = $catSlug;
 
@@ -110,9 +135,32 @@ if ($routeParts[0] === 'tools' && isset($routeParts[1]) && isset($routeParts[2])
         $metaKeywords = strtolower($toolName) . ", " . $catSlug . ", developer tools, free online utils";
         $canonicalUrl = getToolUrl($toolSlug, $tool);
 
+        // SEO Variables
+        $metaDescription = $tool['desc'] . " No server uploads, 100% client-side privacy.";
+        $metaKeywords = strtolower($toolName) . ", " . $catSlug . ", developer tools, free online utils";
+        $canonicalUrl = getToolUrl($toolSlug, $tool);
+
+        // Tracking: Recently Used Tools (Session)
+        // Session started globally at top
+        if (!isset($_SESSION['recent_tools'])) {
+            $_SESSION['recent_tools'] = [];
+        }
+        // Remove if exists
+        $key = array_search($toolSlug, $_SESSION['recent_tools']);
+        if ($key !== false) {
+            unset($_SESSION['recent_tools'][$key]);
+        }
+        // Add to front
+        array_unshift($_SESSION['recent_tools'], $toolSlug);
+        // Keep max 3
+        $_SESSION['recent_tools'] = array_slice($_SESSION['recent_tools'], 0, 3);
+
         $toolView = __DIR__ . '/../views/tools/' . $toolSlug . '.php';
 
         if (file_exists($toolView)) {
+            // Increment Tool View Count
+            $pdo->prepare("UPDATE tools SET view_count = view_count + 1 WHERE id = ?")->execute([$tool['id']]);
+
             include __DIR__ . '/../views/tool-layout.php';
         } else {
             echo "Tool UI coming soon!";

@@ -161,5 +161,85 @@ $tools = [
         'icon' => 'fa-compress-arrows-alt',
         'category' => 'image',
         'tip' => 'WebP format usually offers superior compression over JPEG and PNG.'
+    ],
+    'image-cropper' => [
+        'id' => 21,
+        'name' => 'Image Cropper',
+        'desc' => 'Crop and resize images to exact dimensions.',
+        'icon' => 'fa-crop-simple',
+        'category' => 'image',
+        'tip' => 'Cropping before compressing can save even more file size.'
+    ],
+    'flip-image' => [
+        'id' => 22,
+        'name' => 'Flip Image',
+        'desc' => 'Flip images horizontally or vertically.',
+        'icon' => 'fa-arrows-left-right',
+        'category' => 'image',
+        'tip' => 'Mirroring images can create interesting symmetrical effects.'
+    ],
+    'image-inverter' => [
+        'id' => 23,
+        'name' => 'Image Inverter',
+        'desc' => 'Invert the colors of any image instantly.',
+        'icon' => 'fa-circle-half-stroke',
+        'category' => 'image',
+        'tip' => 'Inverting a black and white image creates a negative effect.'
+    ],
+    'add-borders' => [
+        'id' => 24,
+        'name' => 'Add Borders',
+        'desc' => 'Add custom colored borders to your images.',
+        'icon' => 'fa-border-all',
+        'category' => 'image',
+        'tip' => 'Adding a white border can make your screenshots pop on dark backgrounds.'
+    ],
+    'image-to-ascii' => [
+        'id' => 25,
+        'name' => 'Image to ASCII',
+        'desc' => 'Convert images into ASCII art text.',
+        'icon' => 'fa-font',
+        'category' => 'image',
+        'tip' => 'Works best with high-contrast images and simple shapes.'
+    ],
+    'image-pixelator' => [
+        'id' => 26,
+        'name' => 'Image Pixelator',
+        'desc' => 'Pixelate images for a retro effect or censorship.',
+        'icon' => 'fa-chess-board',
+        'category' => 'image',
+        'tip' => 'Increase pixel size to hide sensitive information in screenshots.'
+    ],
+    'image-watermark' => [
+        'id' => 27,
+        'name' => 'Image Watermark',
+        'desc' => 'Add text or image watermarks to protect your work.',
+        'icon' => 'fa-copyright',
+        'category' => 'image',
+        'tip' => 'Adjust transparency to make the watermark subtle but visible.'
+    ],
+    'split-image' => [
+        'id' => 28,
+        'name' => 'Split Image',
+        'desc' => 'Slice an image into grids or rows/columns.',
+        'icon' => 'fa-table-cells-large',
+        'category' => 'image',
+        'tip' => 'Great for creating Instagram grid layouts.'
+    ],
+    'merge-image' => [
+        'id' => 29,
+        'name' => 'Merge Images',
+        'desc' => 'Combine multiple images into one instantly.',
+        'icon' => 'fa-object-group',
+        'category' => 'image',
+        'tip' => 'Merge screenshots vertically to create a long scrolling image.'
+    ],
+    'jwt-decoder' => [
+        'id' => 30,
+        'name' => 'JWT Decoder',
+        'desc' => 'Decode JSON Web Tokens to view header and payload.',
+        'icon' => 'fa-shield-alt',
+        'category' => 'developer',
+        'tip' => 'Paste a JWT verify its contents. We decode it strictly client-side.'
     ]
 ];
