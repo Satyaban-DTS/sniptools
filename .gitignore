@@ -8,3 +8,4 @@ Archive.zip
 node_modules/
 scripts/php_backup.php
 config/config.php.local
+config/config.php

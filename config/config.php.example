@@ -1,0 +1,39 @@
+<?php
+// config/config.php
+
+define('APP_NAME', 'SnipTools');
+
+// --- ENVIRONMENT DETECTION ---
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$isLocal = (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false);
+
+if ($isLocal) {
+    // Local / Development
+    define('BASE_URL', '');
+
+    define('DB_DRIVER', 'mysql');
+    define('DB_HOST', '127.0.0.1');
+    define('DB_NAME', 'sniptools_db');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+} else {
+    // Live / Production (Hostinger)
+    define('BASE_URL', 'https://sniptools.dastechsolution.in');
+
+    define('DB_DRIVER', 'mysql');
+    define('DB_HOST', 'localhost'); // Usually localhost on Hostinger
+    define('DB_NAME', 'your_live_db_name'); 
+    define('DB_USER', 'your_live_db_user');     
+    define('DB_PASS', 'your_live_db_password'); 
+}
+
+require_once __DIR__ . '/../includes/functions.php';
+
+// Tool Categories
+$categories = [
+    'text' => 'Text Tools',
+    'developer' => 'Developer Tools',
+    'image' => 'Image Tools',
+    'converters' => 'Converters',
+    'tailwind' => 'Tailwind Tools'
+];
