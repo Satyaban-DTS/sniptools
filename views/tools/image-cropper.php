@@ -2,7 +2,7 @@
 // web/views/tools/image-cropper.php
 ?>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
-    integrity="sha512-hvNR0F/e2J7zPPfX0jJe3p8PkBpmpg8vYtY0eqe9rL65XLF6zw81b0egbIH11gJJ8/x95F4ei8e7Q9X8G9r+Ng=="
+    integrity="sha512-hvNR0F/e2J7zPPfLC9auFe3/SE0yG4aJCOd/qxew74NN7eyiSKjr7xJJMu1Jy2wf7FXITpWS1E/RY8yzuXN7VA=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
     .cropper-container {
@@ -44,6 +44,20 @@
 
             <!-- Sidebar Controls -->
             <div class="space-y-6">
+                <!-- Dimension Display -->
+                <div
+                    class="bg-primary/5 p-5 rounded-[1.5rem] border border-primary/10 flex items-center justify-between">
+                    <div>
+                        <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 opacity-60">Crop
+                            Size</p>
+                        <p class="text-xl font-black text-secondary dark:text-white font-mono" id="dimensionDisplay">0 ×
+                            0 px</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </div>
+                </div>
+
                 <!-- Actions -->
                 <div
                     class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm">
@@ -101,7 +115,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"
-    integrity="sha512-9KkIqdfN7ipEW6B6k+Hb20PVt1c5Y5Wp162xE7A7FC2E5v7g5L6Owh+1tA248jKFE5e5E8f740f940z140x15g=="
+    integrity="sha512-9KkIqdfN7ipEW6B6k+Aq20PV31bjODg4AA52W+tYtAE0jE0kMx49bjJ3FgvS56wzmyfMUHbQ4Km2b7l9+Y/+Eg=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
     let cropper;
@@ -131,6 +145,11 @@
                     autoCropArea: 0.9,
                     background: false,
                     responsive: true,
+                    crop(event) {
+                        const data = event.detail;
+                        document.getElementById('dimensionDisplay').textContent =
+                            `${Math.round(data.width)} × ${Math.round(data.height)} px`;
+                    },
                 });
             };
             reader.readAsDataURL(this.files[0]);
@@ -149,13 +168,7 @@
         });
 
         canvas.toBlob((blob) => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'cropped-image.png'; // Default to png
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            snipToolsDownload(blob, 'cropped-image.png');
         }, 'image/png');
     }
 </script>

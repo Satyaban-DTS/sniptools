@@ -135,9 +135,8 @@
     }
 
     function downloadImage() {
-        const link = document.createElement('a');
-        link.download = 'merged-image.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        canvas.toBlob((blob) => {
+            snipToolsDownload(blob, 'merged-image.png');
+        }, 'image/png');
     }
 </script>

@@ -1,358 +1,417 @@
 <?php
 // web/views/admin/dashboard.php
-// Assumes auth check passed
 
-// 1. Fetch Stats
+// 1. Handle POST actions first (BEFORE any HTML output)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action'])) {
+        // Dashboard specific POST actions
+    }
+}
+
+// 2. Fetch Data needed for view
+$pageTitle = 'Admin Dashboard';
+$subRoute = 'dashboard';
+
+// Fetch Stats
 $totalViews = $pdo->query("SELECT COUNT(*) FROM visits")->fetchColumn();
 $uniqueVisitors = $pdo->query("SELECT COUNT(DISTINCT ip_hash) FROM visits")->fetchColumn();
-// Returning visitors are those whose ip_hash appears more than once in the visits table
 $returningVisitors = $pdo->query("SELECT COUNT(*) FROM (SELECT ip_hash FROM visits GROUP BY ip_hash HAVING COUNT(*) > 1) AS t")->fetchColumn();
+
+// Daily Visits for Chart (Last 7 Days)
+$dailyVisits = $pdo->query("SELECT DATE(created_at) as date, COUNT(*) as count FROM visits WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) GROUP BY DATE(created_at) ORDER BY date ASC")->fetchAll();
+$chartLabels = [];
+$chartData = [];
+$dateMap = [];
+foreach ($dailyVisits as $v)
+    $dateMap[$v['date']] = $v['count'];
+for ($i = 6; $i >= 0; $i--) {
+    $d = date('Y-m-d', strtotime("-$i days"));
+    $chartLabels[] = date('D', strtotime($d));
+    $chartData[] = $dateMap[$d] ?? 0;
+}
+
+// Top Countries
+$topCountries = $pdo->query("SELECT country, COUNT(*) as count FROM activity_log WHERE country != 'Unknown' GROUP BY country ORDER BY count DESC LIMIT 5")->fetchAll();
+
+// Browser Breakdown
+$browserStats = $pdo->query("SELECT browser, COUNT(*) as count FROM activity_log GROUP BY browser ORDER BY count DESC LIMIT 4")->fetchAll();
+
+// OS Breakdown
+$osStats = $pdo->query("SELECT os, COUNT(*) as count FROM activity_log GROUP BY os ORDER BY count DESC LIMIT 4")->fetchAll();
 
 $toolCount = $pdo->query("SELECT COUNT(*) FROM tools")->fetchColumn();
 $activeToolCount = $pdo->query("SELECT COUNT(*) FROM tools WHERE is_active=1")->fetchColumn();
 $unreadFeedbackCount = $pdo->query("SELECT COUNT(*) FROM feedback WHERE status = 'new'")->fetchColumn();
 
-// 2. Fetch Tools for Management
-$toolsListRaw = $pdo->query("SELECT t.*, c.name as cat_name FROM tools t LEFT JOIN categories c ON t.category_id = c.id ORDER BY t.category_id, t.name")->fetchAll();
-$toolsByCategory = [];
-foreach ($toolsListRaw as $t) {
-    $groupName = $t['cat_name'] ?? 'Uncategorized';
-    $toolsByCategory[$groupName][] = $t;
-}
-
-// 3. Fetch Settings
-$settingsRAW = $pdo->query("SELECT * FROM settings")->fetchAll();
-$settings = [];
-foreach ($settingsRAW as $s)
-    $settings[$s['key']] = $s['value'];
-
-// 4. Handle POST actions (Toggle Tool, Update Settings)
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Determine action
-    if (isset($_POST['action'])) {
-        if ($_POST['action'] === 'toggle_tool') {
-            $tid = $_POST['tool_id'];
-            $newState = $_POST['current_state'] == 1 ? 0 : 1;
-            $stmt = $pdo->prepare("UPDATE tools SET is_active = ? WHERE id = ?");
-            $stmt->execute([$newState, $tid]);
-            set_flash_message("Tool visibility updated successfully.");
-            header("Location: " . url('admin/dashboard'));
-            exit;
-        }
-
-        if ($_POST['action'] === 'update_settings') {
-            $keys = ['site_name', 'ads_enabled', 'maintenance_mode', 'ad_code_header', 'ad_code_footer', 'ad_code_sidebar', 'ad_code_head'];
-            foreach ($keys as $k) {
-                $val = $_POST[$k] ?? '0';
-                $stmt = $pdo->prepare("INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)");
-                $stmt->execute([$k, $val]);
-            }
-            set_flash_message("Global settings applied successfully.");
-            header("Location: " . url('admin/dashboard'));
-            exit;
-        }
-    }
-}
+// 3. Include Header (Starts Output)
+require_once __DIR__ . '/layout_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - <?php echo APP_NAME; ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <?php include_once __DIR__ . '/../../includes/toast_provider.php'; ?>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#c026d3',
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-
-<body class="bg-[#0f111a] text-gray-100 min-h-screen font-sans">
-
-    <!-- Top Bar -->
-    <header
-        class="bg-gray-800/50 backdrop-blur-md border-b border-gray-700 h-16 flex items-center justify-between px-8 sticky top-0 z-50">
-        <div class="flex items-center space-x-4">
-            <a href="<?php echo url('admin'); ?>" class="flex items-center space-x-3 group">
-                <div
-                    class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-                    <i class="fas fa-bolt text-white"></i>
-                </div>
-                <span class="font-bold text-lg tracking-tight">Admin<span class="text-gray-500">Panel</span></span>
-            </a>
+<div class="space-y-8">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">Dashboard <span
+                    class="text-primary italic">Intelligence</span></h1>
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-[0.2em] mt-2 opacity-60">Real-time performance
+                metrics</p>
         </div>
-        <div class="flex items-center space-x-6">
-            <a href="<?php echo url(); ?>" target="_blank"
-                class="text-sm font-bold text-gray-400 hover:text-white transition-colors">
-                View Site <i class="fas fa-external-link-alt ml-1"></i>
-            </a>
-            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
-            <a href="<?php echo url('admin/feedback'); ?>"
-                class="relative text-sm font-bold text-gray-400 hover:text-white transition-colors flex items-center">
-                Feedback
-                <?php if (($unreadFeedbackCount ?? 0) > 0): ?>
-                    <span
-                        class="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white animate-pulse">
-                        <?php echo $unreadFeedbackCount; ?>
-                    </span>
-                <?php endif; ?>
-            </a>
-            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
-            <a href="<?php echo url('admin/profile'); ?>"
-                class="text-sm font-bold text-gray-400 hover:text-white transition-colors">
-                Profile
-            </a>
-            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
-            <a href="<?php echo url('admin/logout'); ?>"
-                class="text-sm font-bold text-red-400 hover:text-red-300 transition-colors">
-                Logout
-            </a>
+        <div class="flex items-center space-x-3">
+            <div
+                class="px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block mr-2 animate-pulse"></span> SYSTEM
+                LIVE
+            </div>
         </div>
     </header>
 
-    <div class="p-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        <!-- Left Col: Stats & Tools -->
-        <div class="lg:col-span-2 space-y-8">
-
-            <!-- Quick Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div
-                    class="bg-gray-800 p-6 rounded-3xl border border-gray-700 shadow-xl overflow-hidden relative group">
-                    <div
-                        class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-5xl">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Visit Analytics</h3>
-                    <div class="flex items-baseline space-x-2">
-                        <p class="text-3xl font-black text-white"><?php echo number_format($totalViews); ?></p>
-                        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Hits</span>
-                    </div>
-                    <div class="mt-4 flex items-center space-x-4 text-xs">
-                        <div class="flex flex-col">
-                            <span
-                                class="text-emerald-400 font-black"><?php echo number_format($uniqueVisitors); ?></span>
-                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Unique</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span
-                                class="text-primary font-black"><?php echo number_format($returningVisitors); ?></span>
-                            <span
-                                class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Returning</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    class="bg-gray-800 p-6 rounded-3xl border border-gray-700 shadow-xl overflow-hidden relative group">
-                    <div
-                        class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-5xl">
-                        <i class="fas fa-tools"></i>
-                    </div>
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Inventory</h3>
-                    <p class="text-3xl font-black text-emerald-400">
-                        <?php echo $activeToolCount; ?> <span class="text-base text-gray-600">/
-                            <?php echo $toolCount; ?></span>
-                    </p>
-                    <div class="mt-4 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                        <?php echo round(($activeToolCount / max($toolCount, 1)) * 100); ?>% Active and Online
-                    </div>
-                </div>
-
-                <div
-                    class="bg-gray-800 p-6 rounded-3xl border border-gray-700 shadow-xl overflow-hidden relative group">
-                    <div
-                        class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-5xl">
-                        <i class="fas fa-ad"></i>
-                    </div>
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Monetization</h3>
-                    <p
-                        class="text-3xl font-black <?php echo ($settings['ads_enabled'] ?? '0') == '1' ? 'text-blue-400' : 'text-gray-600'; ?>">
-                        <?php echo ($settings['ads_enabled'] ?? '0') == '1' ? 'ACTIVE' : 'PAUSED'; ?>
-                    </p>
-                    <div class="mt-4 flex items-center space-x-1">
-                        <span
-                            class="w-1.5 h-1.5 rounded-full <?php echo ($settings['ads_enabled'] ?? '0') == '1' ? 'bg-blue-400 animate-pulse' : 'bg-gray-600'; ?>"></span>
-                        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Ad Network
-                            Connected</span>
-                    </div>
-                </div>
+    <!-- Top Row: Quick Metrics (Luxury Cards) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 animate-slide-up">
+        <!-- Audience Pulse -->
+        <div
+            class="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
+            <div
+                class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all">
             </div>
-
-            <!-- Tool Management (Category Wise) -->
-            <div class="bg-gray-800 rounded-3xl border border-gray-700 shadow-2xl overflow-hidden">
-                <div class="p-6 border-b border-gray-700 bg-gray-800/50">
-                    <h2 class="font-bold text-xl">Tool Management</h2>
-                    <p class="text-xs text-gray-500 mt-1">Configure visibility and monitor performance across all
-                        categories.</p>
+            <div class="relative z-10 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-500/10">
+                        <i class="fas fa-users text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] opacity-60">Audience
+                        </h3>
+                        <p class="text-2xl font-black text-gray-900 dark:text-white">
+                            <?php echo number_format($uniqueVisitors); ?>
+                        </p>
+                    </div>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <?php
-                    ksort($toolsByCategory);
-                    foreach ($toolsByCategory as $catName => $tools):
-                        ?>
-                        <div class="bg-gray-900/40 px-6 py-3 border-y border-gray-700 flex items-center justify-between">
-                            <span
-                                class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500"><?php echo $catName; ?></span>
-                            <span class="text-[10px] font-bold text-gray-600 italic"><?php echo count($tools); ?> Items in
-                                Category</span>
-                        </div>
-                        <table class="w-full text-left text-sm">
-                            <tbody class="divide-y divide-gray-700">
-                                <?php foreach ($tools as $tool): ?>
-                                    <tr class="hover:bg-gray-700/50 transition-colors group">
-                                        <td class="px-6 py-4 font-bold text-white flex items-center max-w-sm">
-                                            <div
-                                                class="w-9 h-9 rounded-xl bg-gray-700/50 flex items-center justify-center mr-4 text-gray-400 group-hover:bg-primary group-hover:text-white transition-all shadow-md group-hover:shadow-primary/20">
-                                                <i class="fas <?php echo $tool['icon']; ?>"></i>
-                                            </div>
-                                            <div>
-                                                <div class="flex items-center">
-                                                    <span class="truncate"><?php echo $tool['name']; ?></span>
-                                                    <?php if ($tool['is_featured']): ?>
-                                                        <i class="fas fa-star text-yellow-500 ml-2 text-[10px]"
-                                                            title="Featured Tool"></i>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <p class="text-[10px] text-gray-500 font-normal line-clamp-1 mt-0.5">
-                                                    <?php echo $tool['slug']; ?>
-                                                </p>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-gray-400 font-mono text-xs flex items-center">
-                                                <i class="fas fa-eye mr-2 text-[10px] opacity-40"></i>
-                                                <?php echo number_format($tool['view_count']); ?>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <form method="POST" class="inline">
-                                                <input type="hidden" name="action" value="toggle_tool">
-                                                <input type="hidden" name="tool_id" value="<?php echo $tool['id']; ?>">
-                                                <input type="hidden" name="current_state"
-                                                    value="<?php echo $tool['is_active']; ?>">
-                                                <button type="submit"
-                                                    class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all <?php echo $tool['is_active'] ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10' : 'bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white shadow-lg shadow-red-500/10'; ?>">
-                                                    <?php echo $tool['is_active'] ? 'Public' : 'Hidden'; ?>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endforeach; ?>
-                </div>
+                <span
+                    class="text-[9px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg uppercase tracking-widest">+12%</span>
             </div>
-
         </div>
 
-        <!-- Right Col: Config -->
-        <div class="space-y-8">
-            <form method="POST" class="space-y-8">
-                <input type="hidden" name="action" value="update_settings">
-
-                <!-- Global Logic -->
-                <div class="bg-gray-800 p-8 rounded-[2rem] border border-gray-700 shadow-2xl">
-                    <h2 class="font-bold text-xl mb-6 flex items-center">
-                        <i class="fas fa-cog mr-3 text-primary"></i>
-                        Site Config
-                    </h2>
-
-                    <div class="space-y-4">
-                        <div
-                            class="flex items-center justify-between p-4 bg-gray-900/50 rounded-2xl border border-gray-700 hover:border-primary/30 transition-colors">
-                            <div>
-                                <h4 class="font-bold text-white text-sm">Monetization</h4>
-                                <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">Toggle
-                                    Global Ad Load</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="hidden" name="ads_enabled" value="0">
-                                <input type="checkbox" name="ads_enabled" value="1" class="sr-only peer" <?php echo ($settings['ads_enabled'] ?? '0') == '1' ? 'checked' : ''; ?>>
-                                <div
-                                    class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
-                                </div>
-                            </label>
-                        </div>
-
-                        <div
-                            class="flex items-center justify-between p-4 bg-gray-900/50 rounded-2xl border border-gray-700 hover:border-red-500/30 transition-colors">
-                            <div>
-                                <h4 class="font-bold text-white text-sm">Maintenance</h4>
-                                <p class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-0.5">Frontend
-                                    Lockdown</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="hidden" name="maintenance_mode" value="0">
-                                <input type="checkbox" name="maintenance_mode" value="1" class="sr-only peer" <?php echo ($settings['maintenance_mode'] ?? '0') == '1' ? 'checked' : ''; ?>>
-                                <div
-                                    class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600">
-                                </div>
-                            </label>
-                        </div>
+        <!-- Deployment Metrics -->
+        <div
+            class="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
+            <div
+                class="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all">
+            </div>
+            <div class="relative z-10 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/10">
+                        <i class="fas fa-rocket text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] opacity-60">Inventory
+                        </h3>
+                        <p class="text-2xl font-black text-primary"><?php echo $activeToolCount; ?></p>
                     </div>
                 </div>
+                <span
+                    class="text-[9px] font-black text-primary bg-primary/10 px-2 py-1 rounded-lg uppercase tracking-widest">Active</span>
+            </div>
+        </div>
 
-                <!-- Injection Points -->
-                <div class="bg-gray-800 p-8 rounded-[2rem] border border-gray-700 shadow-2xl">
-                    <h2 class="font-bold text-xl mb-6 flex items-center">
-                        <i class="fas fa-terminal mr-3 text-blue-500"></i>
-                        Code Injection
-                    </h2>
-                    <div class="space-y-6">
-                        <div>
-                            <label
-                                class="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3">Header
-                                Stack (Head)</label>
-                            <textarea name="ad_code_head" rows="4"
-                                class="w-full bg-gray-900 border border-gray-700 rounded-2xl px-4 py-4 text-xs font-mono text-gray-400 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-                                placeholder="&lt;script&gt;...&lt;/script&gt;"><?php echo htmlspecialchars($settings['ad_code_head'] ?? ''); ?></textarea>
-                            <p class="text-[10px] text-gray-500 mt-2 font-bold uppercase tracking-tighter italic">
-                                Executed before &lt;/head&gt;</p>
-                        </div>
-
-                        <div class="h-[1px] bg-gray-700"></div>
-
-                        <div>
-                            <label
-                                class="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3">Top
-                                Banner Placement</label>
-                            <textarea name="ad_code_header" rows="3"
-                                class="w-full bg-gray-900 border border-gray-700 rounded-2xl px-4 py-4 text-xs font-mono text-gray-400 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"><?php echo htmlspecialchars($settings['ad_code_header'] ?? ''); ?></textarea>
-                        </div>
-
-                        <div>
-                            <label
-                                class="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3">Sidebar
-                                Sticky Placement</label>
-                            <textarea name="ad_code_sidebar" rows="3"
-                                class="w-full bg-gray-900 border border-gray-700 rounded-2xl px-4 py-4 text-xs font-mono text-gray-400 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"><?php echo htmlspecialchars($settings['ad_code_sidebar'] ?? ''); ?></textarea>
-                        </div>
+        <!-- Feedback Signal -->
+        <div
+            class="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
+            <div
+                class="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all">
+            </div>
+            <div class="relative z-10 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-sm border border-blue-500/10">
+                        <i class="fas fa-satellite-dish text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] opacity-60">Signals
+                        </h3>
+                        <p class="text-2xl font-black text-blue-500"><?php echo $unreadFeedbackCount; ?></p>
                     </div>
                 </div>
-
-                <button type="submit"
-                    class="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/80 hover:to-blue-500 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-primary/20 uppercase tracking-widest text-xs">
-                    Commit Site Changes
-                </button>
-            </form>
-
+                <?php if ($unreadFeedbackCount > 0): ?>
+                    <span class="flex h-3 w-3 relative">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                    </span>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
-</body>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Left Column: Main Analytics & Tools -->
+        <div class="lg:col-span-8 space-y-8">
 
-</html>
+            <!-- Analytics Block (Balanced Grid) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 animate-slide-up" style="animation-delay: 0.1s;">
+                <!-- Traffic Chart (Spans 2 columns if needed, but let's keep it 1:1 for balance) -->
+                <div
+                    class="md:col-span-2 bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-2xl flex flex-col h-[400px]">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Traffic Flow</h3>
+                            <p class="text-sm font-black text-gray-900 dark:text-white mt-1 uppercase">7-Day Trend
+                                Analysis</p>
+                        </div>
+                        <div class="p-3 bg-primary/10 rounded-2xl text-primary">
+                            <i class="fas fa-chart-area text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-h-0">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Global Reach (Ultra Premium) -->
+                <div
+                    class="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-2xl overflow-hidden relative group">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                    <div class="relative flex items-center justify-between mb-10">
+                        <div>
+                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Audience</h3>
+                            <p
+                                class="text-[10px] font-black text-emerald-500 uppercase mt-2 border-l-2 border-emerald-500 pl-3">
+                                Geographic Pulse</p>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-[1.25rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                            <i class="fas fa-globe-americas text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="relative space-y-6">
+                        <?php
+                        $maxHits = !empty($topCountries) ? max(array_column($topCountries, 'count')) : 1;
+                        foreach (array_slice($topCountries, 0, 4) as $c):
+                            $percent = ($c['count'] / $maxHits) * 100;
+                            ?>
+                            <div class="group/item">
+                                <div class="flex items-center justify-between mb-2 px-1">
+                                    <span
+                                        class="text-[11px] font-black text-gray-800 dark:text-white uppercase tracking-tight"><?php echo $c['country']; ?></span>
+                                    <span
+                                        class="text-[10px] font-black text-gray-400"><?php echo number_format($c['count']); ?>
+                                        Hits</span>
+                                </div>
+                                <div
+                                    class="h-1.5 w-full bg-gray-100 dark:bg-gray-900/50 rounded-full overflow-hidden p-[1px]">
+                                    <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000"
+                                        style="width: <?php echo $percent; ?>%"></div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Environment Breakdown -->
+                <div
+                    class="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-2xl relative overflow-hidden group">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
+                    <div class="relative flex items-center justify-between mb-10">
+                        <div>
+                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Environment</h3>
+                            <p
+                                class="text-[10px] font-black text-blue-500 uppercase mt-2 border-l-2 border-blue-500 pl-3">
+                                Client Runtime</p>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-[1.25rem] bg-blue-500/10 flex items-center justify-center text-blue-500">
+                            <i class="fas fa-terminal text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="relative grid grid-cols-2 gap-4">
+                        <?php foreach (array_slice($browserStats, 0, 4) as $b):
+                            $bName = strtolower($b['browser']);
+                            $icon = (strpos($bName, 'chrome') !== false) ? 'fa-chrome' : ((strpos($bName, 'firefox') !== false) ? 'fa-firefox' : 'fa-globe');
+                            ?>
+                            <div
+                                class="bg-gray-50/50 dark:bg-gray-900/40 p-4 rounded-3xl border border-gray-100 dark:border-white/5 transition-all">
+                                <i class="fab <?php echo $icon; ?> text-blue-500/50 text-xl mb-2 block"></i>
+                                <span
+                                    class="text-sm font-black text-gray-900 dark:text-white block"><?php echo $b['count']; ?></span>
+                                <span
+                                    class="text-[8px] font-black text-gray-400 uppercase tracking-widest truncate block"><?php echo $b['browser']; ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Recent Signals (New Widget for balance) -->
+            <div class="bg-white dark:bg-gray-800 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-2xl overflow-hidden animate-slide-up"
+                style="animation-delay: 0.3s;">
+                <div
+                    class="p-8 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between">
+                    <div>
+                        <h2 class="font-black text-lg uppercase tracking-tight">Recent Signals</h2>
+                        <p class="text-xs text-gray-400 font-medium mt-1">Latest incoming feedback from users.</p>
+                    </div>
+                    <a href="<?php echo url('admin/feedback'); ?>"
+                        class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">View
+                        All</a>
+                </div>
+                <div class="p-4">
+                    <?php
+                    $recentFeedback = $pdo->query("SELECT * FROM feedback ORDER BY created_at DESC LIMIT 3")->fetchAll();
+                    if (empty($recentFeedback)): ?>
+                        <div class="p-10 text-center text-gray-400 font-bold uppercase tracking-widest text-[10px]">No
+                            signals recorded</div>
+                    <?php else: ?>
+                        <div class="space-y-4">
+                            <?php foreach ($recentFeedback as $f): ?>
+                                <div
+                                    class="p-5 bg-gray-50/50 dark:bg-gray-700/30 rounded-3xl border border-gray-100 dark:border-white/5 flex items-start space-x-4">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+                                        <i class="fas fa-comment-dots"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span
+                                                class="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tight"><?php echo htmlspecialchars($f['name']); ?></span>
+                                            <span
+                                                class="text-[9px] font-black text-gray-400"><?php echo date('M d, H:i', strtotime($f['created_at'])); ?></span>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1 italic">
+                                            "<?php echo htmlspecialchars($f['message']); ?>"</p>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Sidebar (Sticky Controls & Pulse) -->
+        <div class="lg:col-span-4 space-y-8">
+            <!-- Sidebar Section -->
+            <div class="space-y-8">
+                <!-- System Pulse (Refined Alignment) -->
+                <div
+                    class="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-700 shadow-2xl">
+                    <h2 class="font-black text-xs mb-8 flex items-center uppercase tracking-[0.3em] text-gray-400">
+                        <i class="fas fa-heartbeat mr-3 text-red-500"></i>
+                        System Pulse
+                    </h2>
+                    <div class="space-y-6">
+                        <div
+                            class="p-5 bg-gray-50/50 dark:bg-gray-900/40 rounded-3xl border border-gray-100 dark:border-white/5">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <span
+                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Database</span>
+                                <span
+                                    class="text-[9px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-2 py-0.5 rounded-md">Stable</span>
+                            </div>
+                            <div class="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-500 w-[95%] shadow-[0_0_10px_rgba(16,185,129,0.3)]"></div>
+                            </div>
+                        </div>
+                        <div
+                            class="p-5 bg-gray-50/50 dark:bg-gray-900/40 rounded-3xl border border-gray-100 dark:border-white/5">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cache
+                                    Utility</span>
+                                <span
+                                    class="text-[9px] font-black text-blue-500 uppercase bg-blue-500/10 px-2 py-0.5 rounded-md">Optimal</span>
+                            </div>
+                            <div class="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 w-[88%] shadow-[0_0_10px_rgba(59,130,246,0.3)]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Summary (Luxury Glow) -->
+                <a href="<?php echo url('admin/feedback'); ?>"
+                    class="relative block p-8 rounded-[2.5rem] overflow-hidden group">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-primary group-hover:scale-105 transition-transform duration-700">
+                    </div>
+                    <div
+                        class="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all">
+                    </div>
+
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-10">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white backdrop-blur-md">
+                                <i class="fas fa-comments text-xl"></i>
+                            </div>
+                            <span
+                                class="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest text-white"><?php echo $unreadFeedbackCount; ?>
+                                New</span>
+                        </div>
+                        <h3 class="font-black text-lg uppercase tracking-tight text-white">Community</h3>
+                        <p class="text-xs text-white/70 mt-2 font-medium">Respond to submissions and improve your tools.
+                        </p>
+                    </div>
+
+                    <div
+                        class="absolute bottom-6 right-8 text-white/20 text-4xl group-hover:translate-x-2 transition-transform">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        const trafficChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: <?php echo json_encode($chartLabels); ?>,
+                datasets: [{
+                    label: 'Hits',
+                    data: <?php echo json_encode($chartData); ?>,
+                    borderColor: '#c026d3',
+                    backgroundColor: 'rgba(192, 38, 211, 0.1)',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#c026d3',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e152e',
+                        titleFont: { size: 10, weight: 'bold' },
+                        bodyFont: { size: 12, weight: '900' },
+                        padding: 12,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(156, 163, 175, 0.05)' },
+                        ticks: { color: '#9ca3af', font: { size: 10, weight: 'bold' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#9ca3af', font: { size: 10, weight: 'bold' } }
+                    }
+                }
+            }
+        });
+
+
+    </script>
+
+    <?php
+    require_once __DIR__ . '/layout_footer.php';
+    ?>

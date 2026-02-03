@@ -1,6 +1,7 @@
 # web/public/.htaccess
 
 RewriteEngine On
+RewriteBase /
 
 # Ensure the request isn't a directory or file
 RewriteCond %{REQUEST_FILENAME} !-d

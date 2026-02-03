@@ -118,9 +118,9 @@
 
     function downloadImage() {
         const format = document.getElementById('format').value;
-        const link = document.createElement('a');
-        link.download = 'flipped-image.' + format.split('/')[1];
-        link.href = canvas.toDataURL(format);
-        link.click();
+        const ext = format.split('/')[1];
+        canvas.toBlob((blob) => {
+            snipToolsDownload(blob, `flipped-image.${ext}`);
+        }, format);
     }
 </script>

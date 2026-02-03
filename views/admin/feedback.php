@@ -1,154 +1,215 @@
 <?php
 // views/admin/feedback.php
-$pageTitle = "Feedback Management";
-require_once __DIR__ . '/../../includes/auth.php';
-checkAdmin();
 
-// Handle Mark as Read / Delete
-if (isset($_POST['action']) && isset($_POST['id'])) {
-    $id = $_POST['id'];
-    if ($_POST['action'] === 'read') {
-        $pdo->prepare("UPDATE feedback SET status = 'read' WHERE id = ?")->execute([$id]);
-        set_flash_message("Feedback marked as read.");
+// 1. Handle POST actions first (BEFORE any HTML output)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    // Note: Global CSRF check is handled in admin_router.php
+    if (isset($_POST['id'])) {
+        $id = $_POST['id'];
+        if ($_POST['action'] === 'read') {
+            $pdo->prepare("UPDATE feedback SET status = 'read' WHERE id = ?")->execute([$id]);
+            set_flash_message("Signal archived successfully.");
+        }
+        if ($_POST['action'] === 'delete') {
+            $pdo->prepare("DELETE FROM feedback WHERE id = ?")->execute([$id]);
+            set_flash_message("Signal purged from repository.", "info");
+        }
     }
-    if ($_POST['action'] === 'delete') {
-        $pdo->prepare("DELETE FROM feedback WHERE id = ?")->execute([$id]);
-        set_flash_message("Feedback deleted successfully.", "info");
+
+    // Bulk Actions
+    if ($_POST['action'] === 'purge_processed') {
+        $stmt = $pdo->prepare("DELETE FROM feedback WHERE status = 'read'");
+        $stmt->execute();
+        $count = $stmt->rowCount();
+        set_flash_message("$count processed signals have been purged.", "info");
     }
+
     // Redirect to self to prevent resubmission
     header("Location: " . url('admin/feedback'));
     exit;
 }
 
-$feedbacks = $pdo->query("SELECT * FROM feedback ORDER BY created_at DESC")->fetchAll();
-$unreadFeedbackCount = $pdo->query("SELECT COUNT(*) FROM feedback WHERE status = 'new'")->fetchColumn();
+// 2. Fetch Data needed for view
+$pageTitle = "Feedback Management";
+$subRoute = 'feedback';
+
+$search = isset($_GET['s']) ? trim($_GET['s']) : '';
+$where = $search ? " WHERE (name LIKE ? OR email LIKE ? OR message LIKE ?)" : "";
+$params = $search ? ["%$search%", "%$search%", "%$search%"] : [];
+
+$feedbacks = $pdo->prepare("SELECT * FROM feedback $where ORDER BY created_at DESC");
+$feedbacks->execute($params);
+$feedbacks = $feedbacks->fetchAll();
+
+// AJAX Search Handler
+if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
+    ob_start();
+    include __DIR__ . '/partials/feedback_rows.php';
+    $html = ob_get_clean();
+    header('Content-Type: application/json');
+    echo json_encode(['html' => $html, 'count' => count($feedbacks)]);
+    exit;
+}
+
+// 3. Include Header (Starts Output)
+require_once __DIR__ . '/layout_header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feedback - SnipTools Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <?php include_once __DIR__ . '/../../includes/toast_provider.php'; ?>
-</head>
-
-<body class="bg-gray-900 text-gray-100 min-h-screen">
-    <!-- Top Bar -->
-    <header class="bg-gray-800 border-b border-gray-700 h-16 flex items-center justify-between px-8 sticky top-0 z-50">
-        <div class="flex items-center space-x-4">
-            <a href="<?php echo url('admin'); ?>" class="flex items-center space-x-3 group">
-                <div
-                    class="w-9 h-9 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-600/20 group-hover:scale-105 transition-transform">
-                    <i class="fas fa-bolt text-white"></i>
-                </div>
-                <span class="font-bold text-lg tracking-tight">Admin<span class="text-gray-500">Panel</span></span>
-            </a>
+<div class="space-y-8">
+    <?php if ($msg = get_flash_message()): ?>
+        <div
+            class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-6 py-4 rounded-2xl flex items-center space-x-3 animate-fade-in">
+            <i
+                class="fas <?php echo ($msg['type'] ?? 'success') === 'error' ? 'fa-exclamation-circle text-red-500' : 'fa-check-circle'; ?>"></i>
+            <span
+                class="text-sm font-bold uppercase tracking-tight"><?php echo is_array($msg) ? $msg['message'] : $msg; ?></span>
         </div>
-        <div class="flex items-center space-x-6">
-            <a href="<?php echo url(); ?>" target="_blank"
-                class="text-sm font-bold text-gray-400 hover:text-white transition-colors">
-                View Site <i class="fas fa-external-link-alt ml-1"></i>
-            </a>
-            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
-            <a href="<?php echo url('admin/feedback'); ?>"
-                class="relative text-sm font-bold text-white transition-colors flex items-center">
-                Feedback
-                <?php if (($unreadFeedbackCount ?? 0) > 0): ?>
-                    <span
-                        class="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white animate-pulse">
-                        <?php echo $unreadFeedbackCount; ?>
-                    </span>
-                <?php endif; ?>
-            </a>
-            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
-            <a href="<?php echo url('admin/profile'); ?>"
-                class="text-sm font-bold text-gray-400 hover:text-white transition-colors">
-                Profile
-            </a>
-            <div class="h-6 w-[1px] bg-gray-700 mx-2"></div>
-            <a href="<?php echo url('admin/logout'); ?>"
-                class="text-sm font-bold text-red-400 hover:text-red-300 transition-colors">
-                Logout
-            </a>
+    <?php endif; ?>
+
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight uppercase">User <span
+                    class="text-primary italic">Feedback</span></h1>
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-[0.2em] mt-2 opacity-60">Manage community
+                submissions</p>
+        </div>
+        <div class="flex flex-col md:flex-row items-center gap-3">
+            <!-- Search -->
+            <form id="feedbackSearchForm" method="GET" class="relative">
+                <input type="text" id="feedbackSearchInput" name="s" value="<?php echo htmlspecialchars($search); ?>"
+                    placeholder="Search feedback..."
+                    class="w-full md:w-64 bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 rounded-2xl py-2 px-10 text-sm font-bold focus:border-primary outline-none transition-all shadow-sm dark:text-white">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+            </form>
+
+            <div
+                class="bg-white dark:bg-gray-800 px-6 py-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center space-x-4">
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Matches</span>
+                    <span id="feedbackCount"
+                        class="text-xl font-black text-primary"><?php echo count($feedbacks); ?></span>
+                </div>
+            </div>
+
+            <!-- Bulk Purge -->
+            <button type="button"
+                onclick="triggerBulkAction('purge_processed', 'Are you sure you want to purge all processed signals?')"
+                class="h-full px-6 py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-red-500/20 shadow-sm flex items-center">
+                <i class="fas fa-trash-alt mr-2"></i> Purge All Processed
+            </button>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto p-8">
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-2xl font-bold text-white">User Feedback</h1>
-                <p class="text-sm text-gray-400 mt-1">Manage feedback submissions from the widget.</p>
-            </div>
-        </header>
-
-        <div class="bg-gray-800 rounded-2xl shadow-sm border border-gray-700 overflow-hidden">
+    <div
+        class="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-900/50 border-b border-gray-700">
-                        <th class="p-6 text-xs font-bold text-gray-400 uppercase tracking-wider">User</th>
-                        <th class="p-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Message</th>
-                        <th class="p-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="p-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Actions
+                    <tr class="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                        <th class="p-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Submitter</th>
+                        <th class="p-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Message Content
                         </th>
+                        <th class="p-8 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                        <th class="p-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                            Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-700">
-                    <?php if (empty($feedbacks)): ?>
-                        <tr>
-                            <td colspan="4" class="p-8 text-center text-gray-500 italic">No feedback received yet.</td>
-                        </tr>
-                    <?php endif; ?>
-
-                    <?php foreach ($feedbacks as $f): ?>
-                        <tr class="hover:bg-gray-700/50 transition-colors group">
-                            <td class="p-6">
-                                <div class="font-bold text-white">
-                                    <?php echo htmlspecialchars($f['name']); ?>
-                                </div>
-                                <div class="text-xs text-gray-400 mt-1">
-                                    <?php echo htmlspecialchars($f['email']); ?>
-                                </div>
-                                <div class="text-[10px] text-gray-500 mt-1">
-                                    <?php echo date('M j, Y H:i', strtotime($f['created_at'])); ?>
-                                </div>
-                            </td>
-                            <td class="p-6">
-                                <p class="text-sm text-gray-300 leading-relaxed max-w-xl">
-                                    <?php echo nl2br(htmlspecialchars($f['message'])); ?>
-                                </p>
-                            </td>
-                            <td class="p-6">
-                                <?php if ($f['status'] === 'new'): ?>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">New</span>
-                                <?php else: ?>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">Read</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="p-6 text-right">
-                                <form method="POST" class="inline-block">
-                                    <input type="hidden" name="id" value="<?php echo $f['id']; ?>">
-                                    <?php if ($f['status'] === 'new'): ?>
-                                        <button type="submit" name="action" value="read"
-                                            class="text-blue-400 hover:text-blue-300 font-bold text-xs uppercase tracking-wider mr-4">Mark
-                                            Read</button>
-                                    <?php endif; ?>
-                                    <button type="submit" name="action" value="delete"
-                                        class="text-red-400 hover:text-red-300 font-bold text-xs uppercase tracking-wider"
-                                        onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
+                <tbody id="feedbackTableBody" class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                    <?php include __DIR__ . '/partials/feedback_rows.php'; ?>
                 </tbody>
             </table>
         </div>
-        </main>
     </div>
-</body>
+</div>
 
-</html>
+<!-- Global Action Form -->
+<form id="globalActionForm" method="POST" class="hidden">
+    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+    <input type="hidden" name="id" id="actionId">
+    <input type="hidden" name="action" id="actionType">
+</form>
+
+<script>
+    function triggerAction(id, action, confirmMsg = null) {
+        if (confirmMsg) {
+            showGlobalConfirm({
+                title: 'Terminate Signal?',
+                message: `Are you sure you want to permanently delete this user submission? This action belongs to the <span class="text-red-500 font-bold">Purge Protocol</span> and cannot be undone.`,
+                icon: 'fa-trash-alt',
+                color: 'danger',
+                confirmText: 'Execute Purge',
+                onConfirm: () => {
+                    document.getElementById('actionId').value = id;
+                    document.getElementById('actionType').value = action;
+                    document.getElementById('globalActionForm').submit();
+                }
+            });
+        } else {
+            // No confirmation needed (e.g. archiving)
+            document.getElementById('actionId').value = id;
+            document.getElementById('actionType').value = action;
+            document.getElementById('globalActionForm').submit();
+        }
+    }
+
+    function triggerBulkAction(action, confirmMsg = null) {
+        showGlobalConfirm({
+            title: 'Purge Processed?',
+            message: `Are you sure you want to wipe all <span class="text-emerald-500 font-bold">Processed Signals</span>? this will clean up the repository hierarchy.`,
+            icon: 'fa-broom',
+            color: 'danger',
+            confirmText: 'Purge All',
+            onConfirm: () => {
+                document.getElementById('actionId').value = '';
+                document.getElementById('actionType').value = action;
+                document.getElementById('globalActionForm').submit();
+            }
+        });
+    }
+</script>
+
+<script>
+    // AJAX Search Implementation
+    const feedbackSearchForm = document.getElementById('feedbackSearchForm');
+    const feedbackSearchInput = document.getElementById('feedbackSearchInput');
+    const feedbackTableBody = document.getElementById('feedbackTableBody');
+    const feedbackCount = document.getElementById('feedbackCount');
+
+    let debounceTimer;
+
+    const performSearch = () => {
+        const formData = new FormData(feedbackSearchForm);
+        const params = new URLSearchParams(formData);
+        params.append('ajax', '1');
+
+        // Update URL without reloading
+        const newUrl = `${window.location.pathname}?${params.toString()}`.replace('&ajax=1', '');
+        window.history.pushState({}, '', newUrl);
+
+        fetch(`?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (feedbackTableBody) feedbackTableBody.innerHTML = data.html;
+                if (feedbackCount) feedbackCount.textContent = data.count;
+            })
+            .catch(error => console.error('Error:', error));
+    };
+
+    if (feedbackSearchInput) {
+        feedbackSearchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(performSearch, 300);
+        });
+    }
+
+    if (feedbackSearchForm) {
+        feedbackSearchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            performSearch();
+        });
+    }
+</script>
+
+<?php
+require_once __DIR__ . '/layout_footer.php';
+?>

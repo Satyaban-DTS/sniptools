@@ -1,23 +1,33 @@
 <?php
 // includes/visual_footer.php
 ?>
-<footer class="mt-auto py-4 border-t border-gray-100 dark:border-gray-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-gray-400">
-            <div class="flex items-center space-x-2">
-                <span>&copy; <?php echo date('Y'); ?> <?php echo APP_NAME; ?>.</span>
-                <span class="bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 rounded text-[10px]">v1.2.0</span>
-            </div>
+<footer
+    class="mt-auto border-t border-gray-100 dark:border-white/[0.03] py-6 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
 
-            <div class="flex items-center space-x-6">
-                <a href="<?php echo url('about'); ?>" class="hover:text-primary transition-colors">About</a>
-                <a href="<?php echo url('privacy'); ?>" class="hover:text-primary transition-colors">Privacy</a>
-                <a href="<?php echo url('terms'); ?>" class="hover:text-primary transition-colors">Terms</a>
-            </div>
+        <!-- Left: Brand & Copy -->
+        <div class="flex items-center space-x-4">
+            <span
+                class="text-sm font-black tracking-tighter text-secondary dark:text-white opacity-80"><?php echo APP_NAME; ?></span>
+            <span class="hidden md:inline text-[10px] font-bold text-gray-400 opacity-50">&copy;
+                <?php echo date('Y'); ?> &nbsp;All rights reserved.</span>
+        </div>
 
-            <div class="flex items-center">
-                Made with <i class="fas fa-heart text-red-500 mx-1 animate-pulse"></i> for Developers by &nbsp;<a href="https://dastechsolution.in">Das Tech Solution</a>
-            </div>
+        <!-- Center: Links -->
+        <div class="flex items-center space-x-6">
+            <a href="<?php echo url('privacy'); ?>"
+                class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-primary transition-colors">Privacy</a>
+            <a href="<?php echo url('terms'); ?>"
+                class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-primary transition-colors">Terms</a>
+            <a href="<?php echo url('support'); ?>"
+                class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-primary transition-colors">Support</a>
+        </div>
+
+        <!-- Right: Credits -->
+        <div class="flex items-center text-[10px] font-bold uppercase tracking-widest text-gray-400 opacity-75">
+            <span>Made with ❤️ By</span>
+            <a href="https://dastechsolution.in" target="_blank" class="ml-1.5 hover:text-primary transition-colors">Das
+                Tech Solution</a>
         </div>
     </div>
 </footer>

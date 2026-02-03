@@ -62,18 +62,37 @@
 </div>
 
 <script>
+    function openFeedbackModal(context = '', type = 'feedback') {
+        const modal = document.getElementById('feedbackModal');
+        const form = document.getElementById('feedbackForm');
+        const textarea = form.querySelector('textarea');
+
+        // Store type in form for retrieval during submission
+        form.dataset.type = type;
+
+        if (context) {
+            textarea.value = `${context} \n\n`;
+        } else {
+            textarea.value = '';
+        }
+        modal.classList.remove('hidden');
+        textarea.focus();
+    }
+
     function submitFeedback(e) {
         e.preventDefault();
-        const btn = e.target.querySelector('button[type="submit"]');
+        const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
         const originalText = btn.innerText;
 
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending...';
 
         const formData = {
-            name: e.target.querySelector('input[type="text"]').value,
-            email: e.target.querySelector('input[type="email"]').value,
-            message: e.target.querySelector('textarea').value
+            name: form.querySelector('input[type="text"]').value,
+            email: form.querySelector('input[type="email"]').value,
+            message: form.querySelector('textarea').value,
+            type: form.dataset.type || 'feedback'
         };
 
         fetch('<?php echo url("api/submit_feedback.php"); ?>', {

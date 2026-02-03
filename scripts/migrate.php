@@ -23,6 +23,7 @@ try {
             description TEXT,
             category_id VARCHAR(50),
             icon VARCHAR(50),
+            meta_keywords TEXT,
             view_count INT DEFAULT 0,
             is_active TINYINT DEFAULT 1,
             is_featured TINYINT DEFAULT 0,
@@ -76,13 +77,14 @@ try {
     echo "Categories seeded.\n";
 
     // 3. Seed Tools (Using configurations from config/tools.php)
-    $stmtTool = $pdo->prepare("INSERT INTO tools (slug, name, description, category_id, icon, is_active) 
-                               VALUES (?, ?, ?, ?, ?, ?) 
+    $stmtTool = $pdo->prepare("INSERT INTO tools (slug, name, description, category_id, icon, meta_keywords, is_active) 
+                               VALUES (?, ?, ?, ?, ?, ?, ?) 
                                ON DUPLICATE KEY UPDATE 
                                name = VALUES(name), 
                                description = VALUES(description), 
                                category_id = VALUES(category_id), 
-                               icon = VALUES(icon)");
+                               icon = VALUES(icon),
+                               meta_keywords = VALUES(meta_keywords)");
     foreach ($tools as $slug => $data) {
         $stmtTool->execute([
             $slug,
@@ -90,6 +92,7 @@ try {
             $data['desc'],
             $data['category'] ?? 'uncategorized',
             $data['icon'],
+            $data['keywords'] ?? null,
             1 // is_active
         ]);
     }

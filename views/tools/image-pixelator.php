@@ -128,9 +128,9 @@
 
     function downloadImage() {
         const format = document.getElementById('format').value;
-        const link = document.createElement('a');
-        link.download = 'pixelated-image.' + format.split('/')[1];
-        link.href = canvas.toDataURL(format);
-        link.click();
+        const ext = format.split('/')[1];
+        canvas.toBlob((blob) => {
+            snipToolsDownload(blob, `pixelated-image.${ext}`);
+        }, format);
     }
 </script>

@@ -3,10 +3,15 @@
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
     
-    # Forward all requests to public/
+    # Static files in root
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Forward all requests to public/ folder without looping
     RewriteRule ^$ public/ [L]
-    RewriteRule (.*) public/$1 [L]
+    RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
 </IfModule>
 
 # Performance Optimizations

@@ -12,24 +12,26 @@ foreach ($tools as $slug => $data) {
     $stmt->execute([$slug]);
 
     if (!$stmt->fetch()) {
-        $stmt = $pdo->prepare("INSERT INTO tools (slug, name, description, category_id, icon, is_featured) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO tools (slug, name, description, category_id, icon, meta_keywords, is_featured) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $slug,
             $data['name'],
             $data['desc'],
             $data['category'],
             $data['icon'],
+            $data['keywords'] ?? null,  // Insert keywords
             0
         ]);
         echo "Inserted $slug\n";
     } else {
-        // Update existing tool to sync changes (icon, desc, etc.)
-        $stmt = $pdo->prepare("UPDATE tools SET name = ?, description = ?, category_id = ?, icon = ? WHERE slug = ?");
+        // Update existing tool to sync changes (icon, desc, keywords, etc.)
+        $stmt = $pdo->prepare("UPDATE tools SET name = ?, description = ?, category_id = ?, icon = ?, meta_keywords = ? WHERE slug = ?");
         $stmt->execute([
             $data['name'],
             $data['desc'],
             $data['category'],
             $data['icon'],
+            $data['keywords'] ?? null, // Update keywords
             $slug
         ]);
         echo "Updated $slug\n";

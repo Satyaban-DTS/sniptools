@@ -104,9 +104,8 @@
     }
 
     function downloadImage() {
-        const link = document.createElement('a');
-        link.download = 'inverted-image.png';
-        link.href = canvas.toDataURL();
-        link.click();
+        canvas.toBlob((blob) => {
+            snipToolsDownload(blob, 'inverted-image.png');
+        }, 'image/png');
     }
 </script>

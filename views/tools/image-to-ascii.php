@@ -49,10 +49,16 @@
                     </div>
                 </div>
 
-                <button onclick="copyAscii()"
-                    class="w-full py-4 bg-primary text-white rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-                    <i class="fas fa-copy mr-2"></i> Copy Text
-                </button>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="copyAscii()"
+                        class="w-full py-4 bg-gray-100 dark:bg-gray-700 text-secondary dark:text-white rounded-xl text-sm font-black uppercase tracking-wider hover:bg-gray-200 transition-all">
+                        <i class="fas fa-copy mr-2"></i> Copy
+                    </button>
+                    <button onclick="downloadAscii()"
+                        class="w-full py-4 bg-primary text-white rounded-xl text-sm font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                        <i class="fas fa-download mr-2"></i> Save
+                    </button>
+                </div>
             </div>
 
             <!-- Preview -->
@@ -142,7 +148,13 @@
 
     function copyAscii() {
         navigator.clipboard.writeText(asciiOutput.innerText).then(() => {
-            alert('Copied to clipboard!');
+            showToast ? showToast("ASCII Art copied!") : alert('Copied!');
         });
+    }
+
+    function downloadAscii() {
+        const text = asciiOutput.innerText;
+        if (!text) return;
+        snipToolsDownload(text, `ascii-art-${Date.now()}.txt`, true);
     }
 </script>

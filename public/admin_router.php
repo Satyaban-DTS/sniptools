@@ -2,35 +2,44 @@
 // web/public/admin_router.php
 
 // Extract sub-route after 'admin/'
-// Route is 'admin' or 'admin/login' or 'admin/dashboard'
 $subRoute = str_replace('admin', '', $route);
 $subRoute = ltrim($subRoute, '/');
 
+// 1. Initial Redirect
 if ($subRoute === '' || $subRoute === '/') {
     header("Location: " . url('admin/dashboard'));
     exit;
 }
 
+// 2. Public Login Route
 if ($subRoute === 'login') {
     include __DIR__ . '/../views/admin/login.php';
     exit;
 }
 
-// 6. Feedback Management
-if ($subRoute === 'feedback') {
-    include __DIR__ . '/../views/admin/feedback.php'; // We will create this
-    exit;
+// 3. Security Requirements for all other Admin Routes
+require_once __DIR__ . '/../includes/auth.php';
+checkAdmin();
+
+// CSRF Protection for all POST requests in admin
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = $_POST['csrf_token'] ?? '';
+    // Login page POST is handled inside login.php, but other routes here
+    if (!verify_csrf_token($token)) {
+        die("CSRF Token Validation Failed. Potential security threat blocked.");
+    }
 }
 
+// 4. Auth-Protected Routes
 if ($subRoute === 'logout') {
-    require_once __DIR__ . '/../includes/auth.php';
     logoutAdmin();
     exit;
 }
 
-// Protected Routes check
-require_once __DIR__ . '/../includes/auth.php';
-checkAdmin();
+if ($subRoute === 'feedback') {
+    include __DIR__ . '/../views/admin/feedback.php';
+    exit;
+}
 
 if ($subRoute === 'dashboard') {
     include __DIR__ . '/../views/admin/dashboard.php';
@@ -42,17 +51,32 @@ if ($subRoute === 'profile') {
     exit;
 }
 
-if ($subRoute === 'password-update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once __DIR__ . '/../includes/auth.php';
-    // Assume user is admin (admin_user in session)
-    $user = $_SESSION['admin_user'] ?? 'admin';
+if ($subRoute === 'activity') {
+    include __DIR__ . '/../views/admin/activity_log.php';
+    exit;
+}
 
+if ($subRoute === 'categories') {
+    include __DIR__ . '/../views/admin/categories.php';
+    exit;
+}
+
+if ($subRoute === 'tools') {
+    include __DIR__ . '/../views/admin/tools.php';
+    exit;
+}
+
+if ($subRoute === 'settings') {
+    include __DIR__ . '/../views/admin/settings.php';
+    exit;
+}
+
+if ($subRoute === 'password-update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $user = $_SESSION['admin_user'] ?? 'admin';
     $currentPass = $_POST['current_password'] ?? '';
     $newPass = $_POST['new_password'] ?? '';
     $confirmPass = $_POST['confirm_password'] ?? '';
 
-    // Logic to verify current and update to new
-    // We'll put this logic directly here or in a helper, for simplicity let's handle here for now
     // Fetch user hash
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->execute([$user]);

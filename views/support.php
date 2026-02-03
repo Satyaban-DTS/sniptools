@@ -3,98 +3,146 @@
 
 <main class="flex-1 overflow-y-auto bg-[#f8f9fc] dark:bg-[#0f111a] p-6 lg:p-10 custom-scrollbar">
     <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-12">
-            <div
-                class="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-6 text-emerald-500 animate-bounce">
-                <i class="fas fa-life-ring text-3xl"></i>
+        <!-- Elegant Header -->
+        <div class="mb-14 animate-slide-up">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="h-1 w-12 bg-emerald-500 rounded-full"></div>
+                <h1
+                    class="text-4xl lg:text-5xl font-black text-secondary dark:text-white tracking-tighter uppercase italic">
+                    Support Hub
+                </h1>
             </div>
-            <h1 class="text-4xl font-black text-secondary dark:text-white mb-4 tracking-tight">How can we help?</h1>
-            <p class="text-gray-500 text-lg">Browse our FAQs or reach out to the community.</p>
+            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em] opacity-50 ml-16">
+                Direct transmission & global knowledge base
+            </p>
         </div>
 
-        <!-- Support Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <!-- Sleek Support Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 animate-slide-up" style="animation-delay: 0.1s;">
             <!-- Community -->
-            <div
-                class="bg-white dark:bg-gray-800 p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all group">
+            <a href="#"
+                class="group relative bg-white dark:bg-[#1a1c2e] p-8 rounded-[2.5rem] border border-gray-100 dark:border-white/[0.05] hover:border-primary/50 transition-all duration-500 flex items-center space-x-6 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/5">
                 <div
-                    class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">
-                    <i class="fab fa-discord"></i>
+                    class="absolute -right-6 -top-6 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-700">
                 </div>
-                <h3 class="text-xl font-bold text-secondary dark:text-white mb-2">Join the Community</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">Connect with other developers,
-                    share utility ideas, and report bugs directly to our team.</p>
-                <a href="#"
-                    class="inline-flex items-center text-primary font-bold uppercase tracking-wider text-xs hover:underline">
-                    Join Discord <i class="fas fa-arrow-right ml-2 text-[10px]"></i>
-                </a>
-            </div>
+                <div
+                    class="relative z-10 w-16 h-16 rounded-2xl bg-gray-50 dark:bg-white/[0.03] flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white group-hover:rotate-6 transition-all duration-500 shadow-inner">
+                    <i class="fab fa-discord text-2xl"></i>
+                </div>
+                <div class="relative z-10 flex-1 min-w-0">
+                    <h3
+                        class="text-xl font-black text-secondary dark:text-white group-hover:text-primary transition-colors uppercase tracking-tight">
+                        Deep Sync</h3>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 opacity-60">2,400+
+                        Active Terminals</p>
+                </div>
+                <div
+                    class="relative z-10 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
+                    <i class="fas fa-chevron-right text-xs text-primary"></i>
+                </div>
+            </a>
 
-            <!-- GitHub Issues -->
-            <div
-                class="bg-white dark:bg-gray-800 p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all group">
+            <!-- GitHub -->
+            <a href="#"
+                class="group relative bg-white dark:bg-[#1a1c2e] p-8 rounded-[2.5rem] border border-gray-100 dark:border-white/[0.05] hover:border-secondary/50 transition-all duration-500 flex items-center space-x-6 overflow-hidden shadow-sm hover:shadow-2xl">
                 <div
-                    class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">
-                    <i class="fab fa-github"></i>
+                    class="absolute -right-6 -top-6 w-32 h-32 bg-gray-500/5 rounded-full blur-3xl group-hover:bg-gray-500/10 transition-all duration-700">
                 </div>
-                <h3 class="text-xl font-bold text-secondary dark:text-white mb-2">Report a Bug</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">Found something broken? Open an
-                    issue on our GitHub repository and we'll fix it ASAP.</p>
-                <a href="#"
-                    class="inline-flex items-center text-secondary dark:text-white font-bold uppercase tracking-wider text-xs hover:underline">
-                    Open Issue <i class="fas fa-arrow-right ml-2 text-[10px]"></i>
-                </a>
-            </div>
+                <div
+                    class="relative z-10 w-16 h-16 rounded-2xl bg-gray-50 dark:bg-white/[0.03] flex items-center justify-center text-gray-400 group-hover:bg-secondary dark:group-hover:bg-white group-hover:text-white group-hover:rotate-6 transition-all duration-500 shadow-inner">
+                    <i class="fab fa-github text-2xl"></i>
+                </div>
+                <div class="relative z-10 flex-1 min-w-0">
+                    <h3
+                        class="text-xl font-black text-secondary dark:text-white group-hover:text-primary transition-colors uppercase tracking-tight">
+                        Git Repository</h3>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 opacity-60">Logic &
+                        Fault Reporting</p>
+                </div>
+                <div
+                    class="relative z-10 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
+                    <i class="fas fa-chevron-right text-xs text-primary"></i>
+                </div>
+            </a>
         </div>
 
-        <!-- FAQs -->
-        <div class="space-y-4">
-            <h3 class="text-xl font-black text-secondary dark:text-white mb-6 px-4">Frequently Asked Questions</h3>
+        <!-- Redesigned FAQs -->
+        <div class="max-w-3xl animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="flex items-center space-x-3 mb-10 px-4">
+                <div class="h-4 w-[2px] bg-primary rounded-full"></div>
+                <h3 class="text-sm font-black text-secondary dark:text-white uppercase tracking-[0.3em]">Knowledge
+                    Directory</h3>
+            </div>
 
-            <details
-                class="group bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
-                    <span class="font-bold text-secondary dark:text-white">Is SnipTools really free?</span>
-                    <span class="transition group-open:rotate-180">
-                        <i class="fas fa-chevron-down text-gray-400"></i>
-                    </span>
-                </summary>
-                <div class="px-6 pb-6 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                    Yes! SnipTools is 100% free and open-source. We believe essential developer utilities should be
-                    accessible to everyone without paywalls or subscriptions.
-                </div>
-            </details>
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <details
+                    class="group bg-white dark:bg-[#1a1c2e] rounded-[2rem] border border-gray-100 dark:border-white/[0.05] transition-all overflow-hidden shadow-sm">
+                    <summary class="flex items-center justify-between p-7 cursor-pointer list-none">
+                        <span
+                            class="text-base font-black text-secondary dark:text-gray-200 group-hover:text-primary transition-colors uppercase tracking-tight">
+                            Perpetual Access License?
+                        </span>
+                        <div
+                            class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/[0.03] flex items-center justify-center transition-all group-open:rotate-180 group-hover:bg-primary/10 group-hover:text-primary">
+                            <i class="fas fa-plus text-[10px] group-open:hidden"></i>
+                            <i class="fas fa-minus text-[10px] hidden group-open:block"></i>
+                        </div>
+                    </summary>
+                    <div
+                        class="px-7 pb-8 text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium max-w-2xl italic opacity-80">
+                        SnipTools operates under a zero-cost philosophy. Every utility node in our repository is free,
+                        open-source, and accessible to the global developer collective without subscription barriers.
+                    </div>
+                </details>
 
-            <details
-                class="group bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
-                    <span class="font-bold text-secondary dark:text-white">Is my data safe?</span>
-                    <span class="transition group-open:rotate-180">
-                        <i class="fas fa-chevron-down text-gray-400"></i>
-                    </span>
-                </summary>
-                <div class="px-6 pb-6 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                    Absolutely. All data processing (like image compression, JSON formatting, etc.) happens entirely
-                    within your browser. No data is ever sent to our servers.
-                </div>
-            </details>
+                <!-- FAQ Item 2 -->
+                <details
+                    class="group bg-white dark:bg-[#1a1c2e] rounded-[2rem] border border-gray-100 dark:border-white/[0.05] transition-all overflow-hidden shadow-sm">
+                    <summary class="flex items-center justify-between p-7 cursor-pointer list-none">
+                        <span
+                            class="text-base font-black text-secondary dark:text-gray-200 group-hover:text-primary transition-colors uppercase tracking-tight">
+                            Encryption & Data Sovereignty?
+                        </span>
+                        <div
+                            class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/[0.03] flex items-center justify-center transition-all group-open:rotate-180 group-hover:bg-primary/10 group-hover:text-primary">
+                            <i class="fas fa-plus text-[10px] group-open:hidden"></i>
+                            <i class="fas fa-minus text-[10px] hidden group-open:block"></i>
+                        </div>
+                    </summary>
+                    <div
+                        class="px-7 pb-8 text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium max-w-2xl italic opacity-80">
+                        Our nodes are strictly client-side. All processing cycles occur within your local sandbox
+                        environment. No plaintext parameters, sensitive keys, or temporary files are ever cached on our
+                        remote infrastructure.
+                    </div>
+                </details>
 
-            <details
-                class="group bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
-                    <span class="font-bold text-secondary dark:text-white">Can I contribute new tools?</span>
-                    <span class="transition group-open:rotate-180">
-                        <i class="fas fa-chevron-down text-gray-400"></i>
-                    </span>
-                </summary>
-                <div class="px-6 pb-6 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                    We'd love that! Check out our GitHub repository to submit pull requests for new tools or
-                    improvements to existing ones.
-                </div>
-            </details>
+                <!-- FAQ Item 3 -->
+                <details
+                    class="group bg-white dark:bg-[#1a1c2e] rounded-[2rem] border border-gray-100 dark:border-white/[0.05] transition-all overflow-hidden shadow-sm">
+                    <summary class="flex items-center justify-between p-7 cursor-pointer list-none">
+                        <span
+                            class="text-base font-black text-secondary dark:text-gray-200 group-hover:text-primary transition-colors uppercase tracking-tight">
+                            Protocol Contribution?
+                        </span>
+                        <div
+                            class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/[0.03] flex items-center justify-center transition-all group-open:rotate-180 group-hover:bg-primary/10 group-hover:text-primary">
+                            <i class="fas fa-plus text-[10px] group-open:hidden"></i>
+                            <i class="fas fa-minus text-[10px] hidden group-open:block"></i>
+                        </div>
+                    </summary>
+                    <div
+                        class="px-7 pb-8 text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium max-w-2xl italic opacity-80">
+                        Contribute the future. You are encouraged to fork our repository, refine the logic, and submit
+                        pull requests for new utility clusters. We prioritize community-driven innovation above all.
+                    </div>
+                </details>
+            </div>
         </div>
     </div>
+    <div class="pb-10"></div>
+    <?php include __DIR__ . '/../includes/visual_footer.php'; ?>
 </main>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

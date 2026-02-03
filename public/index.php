@@ -4,6 +4,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+header('Permissions-Policy: browsing-topics=()');
 
 // Support for PHP built-in server
 if (php_sapi_name() === 'cli-server') {
@@ -26,27 +27,49 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/db.php'; // DB Connection
 
 // 1. Load Essential Settings from DB
-$settingsRaw = $pdo->query("SELECT `key`, value FROM settings WHERE `key` IN ('site_name', 'ads_enabled', 'maintenance_mode', 'ad_code_head')")->fetchAll();
+$settingsRaw = $pdo->query("SELECT `key`, value FROM settings")->fetchAll();
 $settings = [];
 foreach ($settingsRaw as $s)
     $settings[$s['key']] = $s['value'];
 
 // Check Maintenance Mode
 if (($settings['maintenance_mode'] ?? '0') === '1' && strpos($route, 'admin') === false) {
-    die("<h1>Under Maintenance</h1><p>We'll be back shortly.</p>");
+    http_response_code(503);
+    require_once __DIR__ . '/../views/maintenance.php';
+    exit;
 }
 
-// 2. Track Visit (Simple)
-$page = $route === '' ? 'home' : $route;
-// Simple daily tracking to avoid massive DB growth - only insert if IP+Page combo doesn't exist today? 
-// For now, just insert all for granularity, or maybe check session?
-// Let's just do a simple insert.
-$pdo->prepare("INSERT INTO visits (page, ip_hash) VALUES (?, ?)")
-    ->execute([$page, md5($_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT'])]);
+// 2. Detailed Activity Log & Visit Tracking (Exclude Admin)
+if (strpos($route, 'admin') === false) {
+    $page = $route === '' ? 'home' : $route;
+    $currentTime = time();
+    $lastPage = $_SESSION['last_recorded_page'] ?? '';
+    $lastTime = $_SESSION['last_recorded_time'] ?? 0;
+
+    // Only record if it's a different page OR it's been more than 30 seconds
+    if ($page !== $lastPage || ($currentTime - $lastTime) > 30) {
+        $ip = get_client_ip();
+        $ua = get_client_ua_info();
+        $geo = get_client_demographics($ip);
+        $sessId = session_id();
+        $fullUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+        // Log into detailed Activity Log (Audit Trail)
+        $pdo->prepare("INSERT INTO activity_log (session_id, ip_address, user_agent, page_url, country, city, os, browser, device) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            ->execute([$sessId, $ip, $ua['ua_raw'], $fullUrl, $geo['country'], $geo['city'], $ua['os'], $ua['browser'], $ua['device']]);
+
+        // Legacy/Quick Stats visit tracking
+        $pdo->prepare("INSERT INTO visits (page, ip_hash) VALUES (?, ?)")
+            ->execute([$page, md5($ip . $ua['ua_raw'])]);
+
+        $_SESSION['last_recorded_page'] = $page;
+        $_SESSION['last_recorded_time'] = $currentTime;
+    }
+}
 
 
 // 3. Load Active Tools for Routing/Display
-$toolsDB = $pdo->query("SELECT id, slug, name, description, icon, category_id FROM tools WHERE is_active = 1")->fetchAll();
+$toolsDB = $pdo->query("SELECT id, slug, name, description, icon, category_id, meta_keywords, view_count, created_at FROM tools WHERE is_active = 1")->fetchAll();
 $tools = [];
 foreach ($toolsDB as $t) {
     $tools[$t['slug']] = [
@@ -54,14 +77,35 @@ foreach ($toolsDB as $t) {
         'name' => $t['name'],
         'desc' => $t['description'],
         'icon' => $t['icon'],
-        'category' => $t['category_id']
+        'category' => $t['category_id'],
+        'keywords' => $t['meta_keywords'],
+        'views' => $t['view_count'],
+        'created_at' => $t['created_at']
     ];
 }
-// Also load categories from DB for sidebar
+
+// 4. Fetch Trending Tools (Data-driven: Top 5 by visits in last 7 days)
+$trendingTools = $pdo->prepare("
+    SELECT t.*, COUNT(v.id) as recent_views 
+    FROM tools t 
+    LEFT JOIN visits v ON (v.page = CONCAT('tools/', t.category_id, '/', t.slug) OR v.page = t.slug)
+    AND v.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    WHERE t.is_active = 1 
+    GROUP BY t.id 
+    ORDER BY recent_views DESC, t.view_count DESC 
+    LIMIT 5
+");
+$trendingTools->execute();
+$trendingTools = $trendingTools->fetchAll();
+// Also load categories from DB for sidebar - Only those with active tools
+$activeCategoryIds = array_unique(array_column($tools, 'category'));
 $catsDB = $pdo->query("SELECT * FROM categories ORDER BY sort_order")->fetchAll();
 $categories = [];
-foreach ($catsDB as $c)
-    $categories[$c['id']] = $c['name'];
+foreach ($catsDB as $c) {
+    if (in_array($c['id'], $activeCategoryIds)) {
+        $categories[$c['id']] = $c['name'];
+    }
+}
 
 
 // --- CORE ROUTER ---
@@ -132,12 +176,7 @@ if ($routeParts[0] === 'tools' && isset($routeParts[1]) && isset($routeParts[2])
 
         // SEO Variables
         $metaDescription = $tool['desc'] . " No server uploads, 100% client-side privacy.";
-        $metaKeywords = strtolower($toolName) . ", " . $catSlug . ", developer tools, free online utils";
-        $canonicalUrl = getToolUrl($toolSlug, $tool);
-
-        // SEO Variables
-        $metaDescription = $tool['desc'] . " No server uploads, 100% client-side privacy.";
-        $metaKeywords = strtolower($toolName) . ", " . $catSlug . ", developer tools, free online utils";
+        $metaKeywords = !empty($tool['keywords']) ? $tool['keywords'] : strtolower($toolName) . ", " . $catSlug . ", developer tools, free online utils";
         $canonicalUrl = getToolUrl($toolSlug, $tool);
 
         // Tracking: Recently Used Tools (Session)

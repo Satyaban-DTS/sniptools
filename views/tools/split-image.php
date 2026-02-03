@@ -110,9 +110,12 @@
                 img.src = canvas.toDataURL('image/png');
                 img.className = 'w-full h-auto rounded';
 
-                const btn = document.createElement('a');
-                btn.href = img.src;
-                btn.download = `split_${r}_${c}.png`;
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    canvas.toBlob((blob) => {
+                        snipToolsDownload(blob, `split_${r}_${c}.png`);
+                    });
+                };
                 btn.className = 'absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl';
                 btn.innerHTML = '<i class="fas fa-download text-white"></i>';
 

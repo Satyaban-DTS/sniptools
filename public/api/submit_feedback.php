@@ -23,6 +23,7 @@ if (!$input) {
 $name = trim($input['name'] ?? '');
 $email = trim($input['email'] ?? '');
 $message = trim($input['message'] ?? '');
+$type = trim($input['type'] ?? 'feedback');
 
 if (empty($name) || empty($email) || empty($message)) {
     http_response_code(400);
@@ -31,8 +32,8 @@ if (empty($name) || empty($email) || empty($message)) {
 }
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO feedback (name, email, message) VALUES (?, ?, ?)");
-    $stmt->execute([$name, $email, $message]);
+    $stmt = $pdo->prepare("INSERT INTO feedback (name, email, message, type) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$name, $email, $message, $type]);
     echo json_encode(['success' => true, 'message' => 'Feedback submitted successfully']);
 } catch (PDOException $e) {
     http_response_code(500);

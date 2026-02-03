@@ -9,7 +9,8 @@
 
             <div class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-relaxed">
                 <p class="mb-8 font-bold text-primary uppercase tracking-widest text-xs">Last updated:
-                    <?php echo date('F Y'); ?></p>
+                    <?php echo date('F Y'); ?>
+                </p>
 
                 <p class="mb-6">
                     At SnipTools, we take your privacy seriously. We understand that when you use developer tools,
@@ -43,6 +44,7 @@
             </div>
         </div>
     </div>
+    <div class="pb-10"></div>
     <?php include_once __DIR__ . '/../includes/visual_footer.php'; ?>
 </main>
 

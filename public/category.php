@@ -31,24 +31,60 @@ $catTools = array_filter($tools, function ($t) use ($categorySlug) {
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Category Header Ad -->
+        <div class="mb-14">
+            <?php
+            $placement = 'header';
+            include __DIR__ . '/../includes/ad-unit.php';
+            ?>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-slide-up">
             <?php foreach ($catTools as $slug => $tool): ?>
                 <a href="<?php echo getToolUrl($slug, $tool); ?>"
-                    class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-2xl transition-all group">
+                    class="group relative bg-white dark:bg-[#1a1c2e] p-6 rounded-[2rem] border border-gray-100 dark:border-white/[0.05] hover:border-primary/50 shadow-sm hover:shadow-[0_20px_50px_rgba(192,38,211,0.1)] hover:-translate-y-2 transition-all duration-500 overflow-hidden flex flex-col items-center text-center">
+
+                    <!-- Decorative Radial Glow -->
                     <div
-                        class="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center text-gray-400 group-hover:bg-primary/10 group-hover:text-primary mb-8 transition-all">
-                        <i class="fas <?php echo $tool['icon']; ?> text-2xl group-hover:scale-110 transition-transform"></i>
+                        class="absolute -right-10 -top-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/15 transition-all duration-700">
                     </div>
-                    <h3 class="text-xl font-black mb-3 group-hover:text-primary transition-colors">
-                        <?php echo $tool['name']; ?>
-                    </h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                        <?php echo $tool['desc']; ?>
-                    </p>
+
+                    <div class="relative mb-6">
+                        <div
+                            class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner group-hover:shadow-lg group-hover:shadow-primary/30">
+                            <i
+                                class="fas <?php echo $tool['icon']; ?> text-2xl group-hover:scale-110 transition-transform"></i>
+                        </div>
+                    </div>
+
+                    <div class="relative z-10 w-full flex flex-col items-center">
+                        <h3
+                            class="font-black text-base text-secondary dark:text-white group-hover:text-primary transition-colors tracking-tight uppercase mb-2">
+                            <?php echo $tool['name']; ?>
+                        </h3>
+                        <p
+                            class="text-[11px] text-gray-500 dark:text-gray-400 font-medium line-clamp-2 opacity-70 italic mb-4">
+                            "<?php echo $tool['desc']; ?>"
+                        </p>
+
+                        <div
+                            class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-gray-50 dark:bg-white/5 border border-transparent group-hover:border-primary/20 transition-all">
+                            <i class="fas fa-bolt text-[10px] text-primary/50"></i>
+                            <span
+                                class="text-[9px] font-black text-gray-400 group-hover:text-primary uppercase tracking-widest">Execute
+                                Node</span>
+                        </div>
+                    </div>
+
+                    <!-- Decorative Bottom Bar -->
+                    <div
+                        class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent w-full opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
                 </a>
             <?php endforeach; ?>
         </div>
     </div>
+    <div class="pb-10"></div>
     <?php include __DIR__ . '/../includes/visual_footer.php'; ?>
 </main>
 

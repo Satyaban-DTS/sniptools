@@ -15,23 +15,25 @@
     }
 
     .toast-item {
-        min-width: 300px;
+        min-width: 320px;
         max-width: 450px;
-        padding: 1rem 1.25rem;
-        border-radius: 1rem;
-        background: white;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        padding: 1.25rem;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         display: flex;
-        items-center: center;
-        gap: 0.75rem;
+        align-items: center;
+        gap: 1rem;
         transform: translateX(120%);
-        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         pointer-events: auto;
-        border: 1px solid rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     .dark .toast-item {
-        background: #1f2937;
+        background: rgba(30, 21, 46, 0.8);
         border-color: rgba(255, 255, 255, 0.05);
         color: white;
     }
@@ -152,8 +154,8 @@
     $flash = get_flash_message();
     if ($flash):
         ?>
-                window.addEventListener('DOMContentLoaded', () => {
-                    showToast(<?php echo json_encode($flash['message']); ?>, <?php echo json_encode($flash['type']); ?>);
+        window.addEventListener('DOMContentLoaded', () => {
+            showToast(<?php echo json_encode($flash['message']); ?>, <?php echo json_encode($flash['type']); ?>);
         });
     <?php endif; ?>
 </script>
