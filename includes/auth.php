@@ -4,7 +4,15 @@ if (session_status() === PHP_SESSION_NONE) {
     // Session Hardening
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
-    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+
+    // Improved SSL detection for proxies
+    $isSecure = false;
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')
+        $isSecure = true;
+    elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+        $isSecure = true;
+
+    if ($isSecure) {
         ini_set('session.cookie_secure', 1);
     }
     session_start();

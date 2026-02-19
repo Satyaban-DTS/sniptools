@@ -54,6 +54,7 @@ try {
             name VARCHAR(100) NOT NULL,
             email VARCHAR(100) NOT NULL,
             message TEXT NOT NULL,
+            type VARCHAR(20) DEFAULT 'feedback',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             status VARCHAR(20) DEFAULT 'new'
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

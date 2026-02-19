@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@source "./**/*.php";
+@source "./public/**/*.php";
+@source "./includes/**/*.php";
+@source "./views/**/*.php";
+@source "./sw.js";
+
+@theme {
+    --color-primary: #c026d3;
+    --color-secondary: #1e152e;
+    --color-accent: #ec4899;
+    --color-surface: #f8f9fc;
+}
+
+/* Custom Utilities if needed */

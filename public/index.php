@@ -1,129 +1,128 @@
 <?php
 // web/public/index.php
-// Start Session Global
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+
+// 1. Initial Setup
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../includes/auth.php';
 header('Permissions-Policy: browsing-topics=()');
 
 // Support for PHP built-in server
 if (php_sapi_name() === 'cli-server') {
     $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $file = __DIR__ . $url;
-    if (is_file($file)) {
+    if (is_file($file))
         return false;
-    }
 }
-require_once __DIR__ . '/../config/config.php';
 
-$route = getRoute(); // From functions.php
+$route = getRoute();
 $routeParts = explode('/', trim($route, '/'));
 
-// --- TOOL DATABASE (Simulated for Phase 2) ---
-// --- TOOL DATABASE ---
+// 2. Load Tools Config (Hardcoded Fallback)
 require_once __DIR__ . '/../config/tools.php';
-// --- TOOL DATABASE ---
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/db.php'; // DB Connection
+// Default categories from config.php are in $categories (defined in config.php)
 
-// 1. Load Essential Settings from DB
-$settingsRaw = $pdo->query("SELECT `key`, value FROM settings")->fetchAll();
-$settings = [];
-foreach ($settingsRaw as $s)
-    $settings[$s['key']] = $s['value'];
+// 3. Database Connection & Dynamic Data
+require_once __DIR__ . '/../includes/db.php';
 
-// Check Maintenance Mode
-if (($settings['maintenance_mode'] ?? '0') === '1' && strpos($route, 'admin') === false) {
-    http_response_code(503);
-    require_once __DIR__ . '/../views/maintenance.php';
-    exit;
-}
+try {
+    // A. Fetch Settings
+    $settingsRaw = $pdo->query("SELECT `key`, value FROM settings")->fetchAll(PDO::FETCH_ASSOC);
+    $settings = [];
+    foreach ($settingsRaw as $s) {
+        $settings[$s['key']] = $s['value'];
+    }
 
-// 2. Detailed Activity Log & Visit Tracking (Exclude Admin)
-if (strpos($route, 'admin') === false) {
-    $page = $route === '' ? 'home' : $route;
-    $currentTime = time();
-    $lastPage = $_SESSION['last_recorded_page'] ?? '';
-    $lastTime = $_SESSION['last_recorded_time'] ?? 0;
+    // B. Maintenance Check
+    if (($settings['maintenance_mode'] ?? '0') === '1' && strpos($route, 'admin') === false) {
+        http_response_code(503);
+        require_once __DIR__ . '/../views/maintenance.php';
+        exit;
+    }
 
-    // Only record if it's a different page OR it's been more than 30 seconds
-    if ($page !== $lastPage || ($currentTime - $lastTime) > 30) {
+    // C. Visit Tracking
+    if (strpos($route, 'admin') === false) {
+        $page = $route === '' ? 'home' : $route;
         $ip = get_client_ip();
-        $ua = get_client_ua_info();
-        $geo = get_client_demographics($ip);
         $sessId = session_id();
-        $fullUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-
-        // Log into detailed Activity Log (Audit Trail)
-        $pdo->prepare("INSERT INTO activity_log (session_id, ip_address, user_agent, page_url, country, city, os, browser, device) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-            ->execute([$sessId, $ip, $ua['ua_raw'], $fullUrl, $geo['country'], $geo['city'], $ua['os'], $ua['browser'], $ua['device']]);
-
-        // Legacy/Quick Stats visit tracking
         $pdo->prepare("INSERT INTO visits (page, ip_hash) VALUES (?, ?)")
-            ->execute([$page, md5($ip . $ua['ua_raw'])]);
-
-        $_SESSION['last_recorded_page'] = $page;
-        $_SESSION['last_recorded_time'] = $currentTime;
+            ->execute([$page, md5($ip . ($_SERVER['HTTP_USER_AGENT'] ?? ''))]);
     }
-}
 
+    // D. Fetch Tools from DB
+    $toolsDB = $pdo->query("SELECT id, slug, name, description, icon, category_id, meta_keywords, view_count, created_at FROM tools WHERE is_active = 1")->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Load Active Tools for Routing/Display
-$toolsDB = $pdo->query("SELECT id, slug, name, description, icon, category_id, meta_keywords, view_count, created_at FROM tools WHERE is_active = 1")->fetchAll();
-$tools = [];
-foreach ($toolsDB as $t) {
-    $tools[$t['slug']] = [
-        'id' => $t['id'],
-        'name' => $t['name'],
-        'desc' => $t['description'],
-        'icon' => $t['icon'],
-        'category' => $t['category_id'],
-        'keywords' => $t['meta_keywords'],
-        'views' => $t['view_count'],
-        'created_at' => $t['created_at']
-    ];
-}
-
-// 4. Fetch Trending Tools (Data-driven: Top 5 by visits in last 7 days)
-$trendingTools = $pdo->prepare("
-    SELECT t.*, COUNT(v.id) as recent_views 
-    FROM tools t 
-    LEFT JOIN visits v ON (v.page = CONCAT('tools/', t.category_id, '/', t.slug) OR v.page = t.slug)
-    AND v.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-    WHERE t.is_active = 1 
-    GROUP BY t.id 
-    ORDER BY recent_views DESC, t.view_count DESC 
-    LIMIT 5
-");
-$trendingTools->execute();
-$trendingTools = $trendingTools->fetchAll();
-// Also load categories from DB for sidebar - Only those with active tools
-$activeCategoryIds = array_unique(array_column($tools, 'category'));
-$catsDB = $pdo->query("SELECT * FROM categories ORDER BY sort_order")->fetchAll();
-$categories = [];
-foreach ($catsDB as $c) {
-    if (in_array($c['id'], $activeCategoryIds)) {
-        $categories[$c['id']] = $c['name'];
+    // Only overwrite if we found tools in DB
+    if (!empty($toolsDB)) {
+        $tools = []; // Clear hardcoded $tools
+        foreach ($toolsDB as $t) {
+            $tools[$t['slug']] = [
+                'id' => $t['id'],
+                'name' => $t['name'],
+                'desc' => $t['description'],
+                'icon' => $t['icon'],
+                'category' => $t['category_id'],
+                'keywords' => $t['meta_keywords'],
+                'views' => $t['view_count'],
+                'created_at' => $t['created_at']
+            ];
+        }
     }
+
+    // E. Fetch Categories from DB
+    $catsDBFromDB = $pdo->query("SELECT * FROM categories ORDER BY sort_order")->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($catsDBFromDB)) {
+        $catsDB = $catsDBFromDB;
+        // Update $categories mapping too
+        $categories = [];
+        foreach ($catsDB as $c) {
+            $categories[$c['id']] = $c['name'];
+        }
+    } else {
+        // Fallback to hardcoded categories from config.php if Table/Rows missing
+        $catsDB = [];
+        foreach ($categories as $id => $name) {
+            $catsDB[] = ['id' => $id, 'name' => $name, 'icon' => 'fa-cube', 'sort_order' => 0];
+        }
+    }
+
+    // F. Fetch Trending Tools
+    $trendingToolsQ = $pdo->query("SELECT * FROM tools WHERE is_active = 1 ORDER BY view_count DESC LIMIT 5");
+    $trendingTools = $trendingToolsQ->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    // If DB fails, we still have hardcoded $tools and $categories from include
+    if (!isset($catsDB)) {
+        $catsDB = [];
+        foreach ($categories as $id => $name) {
+            $catsDB[] = ['id' => $id, 'name' => $name, 'icon' => 'fa-cube', 'sort_order' => 0];
+        }
+    }
+    if (!isset($trendingTools))
+        $trendingTools = array_slice($tools, 0, 5);
 }
 
+// Ensure $catsDB is NEVER undefined
+if (!isset($catsDB))
+    $catsDB = [];
 
-// --- CORE ROUTER ---
+// --- CORE ROUTING ---
 
-
-// 2. Admin Panel Routes
 if (strpos($route, 'admin') === 0) {
     include __DIR__ . '/admin_router.php';
     exit;
 }
 
-// 2. Dashboard (Home)
+if (in_array($route, ['diag.php', 'hard_reset.php', 'security_reset.php', 'test.php'])) {
+    if (file_exists(__DIR__ . '/' . $route)) {
+        include __DIR__ . '/' . $route;
+        exit;
+    }
+}
+
 if (empty($route) || $route === '/') {
     include __DIR__ . '/dashboard.php';
     exit;
 }
-
-// SEO Routes (for PHP built-in server which ignores .htaccess)
 if ($route === 'sitemap.xml') {
     include __DIR__ . '/sitemap.php';
     exit;
@@ -132,78 +131,54 @@ if ($route === 'robots.txt') {
     include __DIR__ . '/robots.php';
     exit;
 }
-
-// 2. All Tools Landing Page (/tools)
 if ($route === 'tools') {
     $pageTitle = "All Tools";
     include __DIR__ . '/tools.php';
     exit;
 }
 
-// 3. Support Page
+if (strpos($route, 'api/') === 0) {
+    $apiFile = __DIR__ . '/' . $route;
+    if (file_exists($apiFile)) {
+        include $apiFile;
+        exit;
+    }
+}
+
 if ($route === 'support') {
     $pageTitle = "Help & Support";
     include __DIR__ . '/../views/support.php';
     exit;
 }
 
-// 4. Static Pages (About, Privacy, Terms)
-if (in_array($route, ['about', 'privacy', 'terms'])) {
+if (in_array($route, ['about', 'privacy', 'terms', 'contact'])) {
     $pageTitle = ucfirst($route);
-    if ($route === 'privacy')
-        $pageTitle = 'Privacy Policy';
-    if ($route === 'terms')
-        $pageTitle = 'Terms of Service';
-
     include __DIR__ . '/../views/' . $route . '.php';
     exit;
 }
 
-// 2. Nested Tool Routes (/tools/text/word-counter)
+// Nested Tool Routes
 if ($routeParts[0] === 'tools' && isset($routeParts[1]) && isset($routeParts[2])) {
-    $catSlug = $routeParts[1];
     $toolSlug = $routeParts[2];
-
-    if (isset($tools[$toolSlug]) && $tools[$toolSlug]['category'] === $catSlug) {
+    if (isset($tools[$toolSlug])) {
         $tool = $tools[$toolSlug];
-        $pageTitle = $tool['name']; // Set page title to tool name
-        $toolName = $tool['name'];
-        $toolIcon = $tool['icon'];
-        $toolDescription = $tool['desc'];
-        $toolTip = $tool['tip'] ?? 'Tip: This tool runs 100% in your browser for maximum privacy.';
-        $toolCategory = $categories[$catSlug] ?? $catSlug;
-        $toolCategorySlug = $catSlug;
-
-        // SEO Variables
-        $metaDescription = $tool['desc'] . " No server uploads, 100% client-side privacy.";
-        $metaKeywords = !empty($tool['keywords']) ? $tool['keywords'] : strtolower($toolName) . ", " . $catSlug . ", developer tools, free online utils";
-        $canonicalUrl = getToolUrl($toolSlug, $tool);
-
-        // Tracking: Recently Used Tools (Session)
-        // Session started globally at top
-        if (!isset($_SESSION['recent_tools'])) {
+        $pageTitle = $tool['name'];
+        if (!isset($_SESSION['recent_tools']))
             $_SESSION['recent_tools'] = [];
-        }
-        // Remove if exists
-        $key = array_search($toolSlug, $_SESSION['recent_tools']);
-        if ($key !== false) {
-            unset($_SESSION['recent_tools'][$key]);
-        }
-        // Add to front
         array_unshift($_SESSION['recent_tools'], $toolSlug);
-        // Keep max 3
-        $_SESSION['recent_tools'] = array_slice($_SESSION['recent_tools'], 0, 3);
+        $_SESSION['recent_tools'] = array_slice(array_unique($_SESSION['recent_tools']), 0, 3);
 
+        @$pdo->prepare("UPDATE tools SET view_count = view_count + 1 WHERE id = ?")->execute([$tool['id']]);
+
+        $toolCategorySlug = $routeParts[1];
+        $toolCategory = $categories[$toolCategorySlug] ?? $toolCategorySlug;
         $toolView = __DIR__ . '/../views/tools/' . $toolSlug . '.php';
+        $toolName = $tool['name'];
+        $toolDescription = $tool['desc'] ?? '';
+        $toolIcon = $tool['icon'] ?? 'fa-cube';
+        $toolTip = $tool['tip'] ?? 'Tip: This tool runs 100% in your browser for maximum privacy.';
 
-        if (file_exists($toolView)) {
-            // Increment Tool View Count
-            $pdo->prepare("UPDATE tools SET view_count = view_count + 1 WHERE id = ?")->execute([$tool['id']]);
-
-            include __DIR__ . '/../views/tool-layout.php';
-        } else {
-            echo "Tool UI coming soon!";
-        }
+        include __DIR__ . '/../views/tool-layout.php';
     } else {
         http_response_code(404);
         include __DIR__ . '/dashboard.php';
@@ -211,8 +186,8 @@ if ($routeParts[0] === 'tools' && isset($routeParts[1]) && isset($routeParts[2])
     exit;
 }
 
-// 3. Category Landing Pages (/tools/text)
-if ($routeParts[0] === 'tools' && isset($routeParts[1]) && !isset($routeParts[2])) {
+// Category Routes
+if ($routeParts[0] === 'tools' && isset($routeParts[1])) {
     $catSlug = $routeParts[1];
     if (isset($categories[$catSlug])) {
         $pageTitle = $categories[$catSlug];
@@ -225,12 +200,6 @@ if ($routeParts[0] === 'tools' && isset($routeParts[1]) && !isset($routeParts[2]
     exit;
 }
 
-// 4. Legacy/Support Routes or others
-if ($routeParts[0] === 'category' && isset($routeParts[1])) {
-    header("Location: " . url('tools/' . $routeParts[1]));
-    exit;
-}
-
-// 4. Default 404
+// Default 404
 http_response_code(404);
-include __DIR__ . '/dashboard.php'; // Fail back to dashboard for now
+include __DIR__ . '/dashboard.php';

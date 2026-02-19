@@ -35,6 +35,11 @@
                         class="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-500 border border-blue-500/20">
                         <i class="fas fa-lightbulb mr-1"></i> Suggestion
                     </span>
+                <?php elseif (($f['type'] ?? 'feedback') === 'contact'): ?>
+                    <span
+                        class="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                        <i class="fas fa-envelope mr-1"></i> Contact
+                    </span>
                 <?php else: ?>
                     <span
                         class="inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-purple-500/10 text-purple-500 border border-purple-500/20">

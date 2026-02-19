@@ -1,5 +1,25 @@
 <?php
 // web/views/admin/profile.php
+$msg = get_flash_message();
+
+// Fallback for URL-based feedback (if session fails)
+if (!$msg && isset($_GET['updated'])) {
+    $msg = ['message' => 'Security credentials updated.', 'type' => 'success'];
+}
+if (!$msg && isset($_GET['error'])) {
+    $e = $_GET['error'];
+    $errMsg = 'Security update failed.';
+    if ($e === 'invalid_current')
+        $errMsg = 'Incorrect current password.';
+    if ($e === 'user_not_found')
+        $errMsg = 'Admin user account not found in database.';
+    if ($e === 'match_mismatch')
+        $errMsg = 'New passwords do not match.';
+    if ($e === 'too_short')
+        $errMsg = 'Password must be at least 6 characters.';
+    $msg = ['message' => $errMsg, 'type' => 'error'];
+}
+
 $pageTitle = 'Admin Profile';
 $subRoute = 'profile'; // Active state helper
 require_once __DIR__ . '/layout_header.php';
@@ -22,19 +42,12 @@ require_once __DIR__ . '/layout_header.php';
             </p>
         </div>
 
-        <?php if (isset($error)): ?>
+        <?php if ($msg = get_flash_message()): ?>
             <div
-                class="bg-red-500/10 border border-red-500/20 text-red-500 px-6 py-4 rounded-2xl mb-8 text-xs font-bold text-center flex items-center justify-center">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                <?php echo $error; ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($success)): ?>
-            <div
-                class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-6 py-4 rounded-2xl mb-8 text-xs font-bold text-center flex items-center justify-center">
-                <i class="fas fa-check-circle mr-2"></i>
-                <?php echo $success; ?>
+                class="<?php echo ($msg['type'] ?? 'success') === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'; ?> border px-6 py-4 rounded-2xl mb-8 text-xs font-bold text-center flex items-center justify-center animate-fade-in">
+                <i
+                    class="fas <?php echo ($msg['type'] ?? 'success') === 'error' ? 'fa-exclamation-triangle' : 'fa-check-circle'; ?> mr-2"></i>
+                <?php echo is_array($msg) ? $msg['message'] : $msg; ?>
             </div>
         <?php endif; ?>
 

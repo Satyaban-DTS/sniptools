@@ -15,6 +15,8 @@
 
         <!-- Center: Links -->
         <div class="flex items-center space-x-6">
+            <a href="<?php echo url('contact'); ?>"
+                class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-primary transition-colors">Contact</a>
             <a href="<?php echo url('privacy'); ?>"
                 class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-primary transition-colors">Privacy</a>
             <a href="<?php echo url('terms'); ?>"

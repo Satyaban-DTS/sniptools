@@ -26,12 +26,12 @@ include __DIR__ . '/../includes/sidebar.php';
                     your workflow?</p>
             </div>
 
-            <div class="flex items-center space-x-3">
-                <div
+            <div class="flex items-center space-x-3" role="list">
+                <div role="listitem"
                     class="glass-card px-4 py-2.5 rounded-2xl flex items-center space-x-3 border-white/10 shadow-sm group hover:border-primary/30 transition-all">
                     <div
                         class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xs group-hover:bg-primary group-hover:text-white transition-all">
-                        <i class="fas fa-bolt"></i>
+                        <i class="fas fa-bolt" aria-hidden="true"></i>
                     </div>
                     <div>
                         <p class="text-[9px] font-black text-secondary dark:text-white uppercase tracking-tight">30+
@@ -39,11 +39,11 @@ include __DIR__ . '/../includes/sidebar.php';
                         <p class="text-[8px] text-gray-500 font-bold uppercase opacity-60">Handpicked</p>
                     </div>
                 </div>
-                <div
+                <div role="listitem"
                     class="glass-card px-4 py-2.5 rounded-2xl flex items-center space-x-3 border-white/10 shadow-sm group hover:border-emerald-500/30 transition-all">
                     <div
                         class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 text-xs group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                        <i class="fas fa-shield-virus"></i>
+                        <i class="fas fa-shield-virus" aria-hidden="true"></i>
                     </div>
                     <div>
                         <p class="text-[9px] font-black text-secondary dark:text-white uppercase tracking-tight">100%
@@ -51,11 +51,11 @@ include __DIR__ . '/../includes/sidebar.php';
                         <p class="text-[8px] text-gray-500 font-bold uppercase opacity-60">Client-Side</p>
                     </div>
                 </div>
-                <div
+                <div role="listitem"
                     class="glass-card px-4 py-2.5 rounded-2xl flex items-center space-x-3 border-white/10 shadow-sm group hover:border-blue-500/30 transition-all">
                     <div
                         class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 text-xs group-hover:bg-blue-500 group-hover:text-white transition-all">
-                        <i class="fas fa-wifi-slash"></i>
+                        <i class="fas fa-wifi-slash" aria-hidden="true"></i>
                     </div>
                     <div>
                         <p class="text-[9px] font-black text-secondary dark:text-white uppercase tracking-tight">Offline
@@ -67,7 +67,7 @@ include __DIR__ . '/../includes/sidebar.php';
         </div>
 
         <!-- Hero Section -->
-        <div class="mb-24 relative group overflow-hidden bg-gradient-to-r from-secondary to-[#2d1b4e] rounded-[3rem] p-10 lg:px-16 lg:py-14 text-white shadow-2xl animate-slide-up"
+        <div class="mb-24 relative group overflow-hidden bg-secondary hero-gradient rounded-[3rem] p-10 lg:px-16 lg:py-14 text-white shadow-2xl animate-slide-up"
             style="animation-delay: 0.1s;">
             <div
                 class="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] -mr-40 -mt-40 group-hover:bg-primary/30 transition-all duration-700">
@@ -80,10 +80,10 @@ include __DIR__ . '/../includes/sidebar.php';
                         <?php echo htmlspecialchars($settings['cta_badge'] ?? 'Phase 2: Live Tools'); ?>
                     </span>
                 </div>
-                <h1 class="text-3xl lg:text-5xl font-black mb-4 leading-[1.1] tracking-tighter">
+                <h1 class="text-3xl lg:text-5xl font-black mb-4 leading-[1.1] tracking-tighter" fetchpriority="high">
                     <?php echo $settings['cta_title'] ?? 'Built for speed. <br> Designed for <span class="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent italic">Security.</span>'; ?>
                 </h1>
-                <p class="text-gray-400 text-base mb-8 leading-relaxed max-w-xl">
+                <p class="text-gray-400 text-base mb-8 leading-relaxed max-w-xl hero-text">
                     <?php echo htmlspecialchars($settings['cta_description'] ?? 'High-performance developer tools with clean URLs and encrypted data paths.'); ?>
                 </p>
                 <div class="flex flex-wrap items-center gap-4">
@@ -131,11 +131,11 @@ include __DIR__ . '/../includes/sidebar.php';
                             continue;
                         $t = $tools[$slug];
                         ?>
-                        <a href="<?php echo getToolUrl($slug, $t); ?>"
+                        <a href="<?php echo getToolUrl($slug, $t); ?>" aria-label="Open tool: <?php echo $t['name']; ?>"
                             class="glass-card flex items-center p-5 rounded-3xl border-white/10 hover:border-blue-500/30 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 group">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 mr-4 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-inner">
-                                <i class="fas <?php echo $t['icon']; ?> text-lg"></i>
+                                <i class="fas <?php echo $t['icon']; ?> text-lg" aria-hidden="true"></i>
                             </div>
                             <div class="min-w-0">
                                 <h4

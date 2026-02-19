@@ -8,31 +8,32 @@ include __DIR__ . '/../includes/sidebar.php';
     <div class="max-w-7xl mx-auto">
         <!-- Tool Header -->
         <div class="mb-10 animate-fade-in">
-            <nav
+            <nav aria-label="Breadcrumb"
                 class="flex mb-8 text-[9px] font-black uppercase tracking-[0.3em] text-gray-400 items-center opacity-60">
                 <a href="<?php echo url('tools'); ?>" class="hover:text-primary transition-colors">Workspace</a>
-                <i class="fas fa-chevron-right text-[6px] mx-4 opacity-30"></i>
+                <i class="fas fa-chevron-right text-[6px] mx-4 opacity-30" aria-hidden="true"></i>
                 <a href="<?php echo url('tools/' . $toolCategorySlug); ?>"
                     class="hover:text-primary transition-colors"><?php echo $toolCategory; ?></a>
-                <i class="fas fa-chevron-right text-[6px] mx-4 opacity-30"></i>
+                <i class="fas fa-chevron-right text-[6px] mx-4 opacity-30" aria-hidden="true"></i>
                 <span class="text-secondary dark:text-white">Active Node</span>
 
                 <div class="ml-auto hidden md:flex items-center space-x-3">
-                    <button onclick="shareTool('<?php echo addslashes($toolName); ?>')"
+                    <button onclick="shareTool('<?php echo addslashes($toolName); ?>')" aria-label="Share this tool"
                         class="group flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-white/20 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
                         <div
                             class="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all text-primary">
-                            <i class="fas fa-share-nodes text-[10px]"></i>
+                            <i class="fas fa-share-nodes text-[10px]" aria-hidden="true"></i>
                         </div>
                         <span
                             class="text-[10px] font-black uppercase tracking-widest text-secondary dark:text-gray-300 group-hover:text-primary transition-colors">Share</span>
                     </button>
 
                     <button onclick="openFeedbackModal('<?php echo addslashes($toolName); ?>')"
+                        aria-label="Report a bug"
                         class="group flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-white/20 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-300">
                         <div
                             class="w-6 h-6 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all text-red-500">
-                            <i class="fas fa-bug text-[10px]"></i>
+                            <i class="fas fa-bug text-[10px]" aria-hidden="true"></i>
                         </div>
                         <span
                             class="text-[10px] font-black uppercase tracking-widest text-secondary dark:text-gray-300 group-hover:text-red-500 transition-colors">Report
@@ -44,7 +45,7 @@ include __DIR__ . '/../includes/sidebar.php';
             <div class="flex flex-col md:flex-row md:items-center gap-8 group">
                 <div
                     class="w-20 h-20 rounded-[2rem] bg-white dark:bg-[#1a1c2e] shadow-xl flex items-center justify-center border border-gray-100 dark:border-white/5 transition-all duration-500 group-hover:rotate-6 group-hover:scale-110">
-                    <i class="fas <?php echo $toolIcon; ?> text-3xl text-primary"></i>
+                    <i class="fas <?php echo $toolIcon; ?> text-3xl text-primary" aria-hidden="true"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-4 mb-2">
@@ -53,8 +54,9 @@ include __DIR__ . '/../includes/sidebar.php';
                             <?php echo $toolName; ?>
                         </h1>
                         <button onclick="toggleFavorite('<?php echo $toolSlug; ?>')" id="favBtn"
+                            aria-label="Toggle favorite"
                             class="w-12 h-12 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-300 hover:text-yellow-500 transition-all shadow-sm flex items-center justify-center">
-                            <i class="fas fa-star text-xl" id="favIcon"></i>
+                            <i class="fas fa-star text-xl" id="favIcon" aria-hidden="true"></i>
                         </button>
                     </div>
                     <p class="text-gray-500 dark:text-gray-400 font-medium text-lg leading-relaxed max-w-3xl">

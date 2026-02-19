@@ -20,13 +20,20 @@ self.addEventListener('fetch', (event) => {
     // 1. Only handle GET requests
     if (event.request.method !== 'GET') return;
 
-    // 2. Ignore External Tracking / Analytics / Ads
+    // 2. Ignore External Tracking / Ads, but ALLOW trusted CDNs
     const url = event.request.url;
-    if (url.includes('google-analytics.com') ||
+    const isCDN = url.includes('fonts.googleapis.com') ||
+        url.includes('fonts.gstatic.com') ||
+        url.includes('cdnjs.cloudflare.com') ||
+        url.includes('cdn.tailwindcss.com');
+
+    if (!isCDN && (
+        url.includes('google-analytics.com') ||
         url.includes('googletagmanager.com') ||
         url.includes('aclib.js') ||
         url.includes('adnxs.com') ||
-        url.includes('doubleclick.net')) {
+        url.includes('doubleclick.net')
+    )) {
         return;
     }
 

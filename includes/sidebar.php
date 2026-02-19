@@ -28,8 +28,9 @@ $inactiveIcon = 'text-gray-400 group-hover:text-primary';
     <div class="pt-6 px-4 flex justify-between items-center h-16 shrink-0">
         <p class="sidebar-expand-only text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] opacity-50">
             Navigation</p>
-        <button id="sidebarCollapseBtn" class="p-2 rounded-xl hover:bg-white/10 text-gray-400 transition-all group">
-            <i class="fas fa-angles-left group-[.collapsed]:rotate-180 transition-transform"></i>
+        <button id="sidebarCollapseBtn" aria-label="Collapse Sidebar"
+            class="p-2 rounded-xl hover:bg-white/10 text-gray-400 transition-all group">
+            <i class="fas fa-angles-left group-[.collapsed]:rotate-180 transition-transform" aria-hidden="true"></i>
         </button>
     </div>
 
@@ -38,8 +39,9 @@ $inactiveIcon = 'text-gray-400 group-hover:text-primary';
         <div class="relative group">
             <div
                 class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors text-[10px]">
-                <i class="fas fa-filter"></i>
+                <i class="fas fa-filter" aria-hidden="true"></i>
             </div>
+            <label for="sidebarFilter" class="sr-only">Filter Navigation</label>
             <input type="text" id="sidebarFilter" placeholder="Quick filter..."
                 class="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-9 pr-4 text-xs font-bold text-white placeholder:text-gray-500 outline-none focus:border-primary/30 transition-all">
         </div>
@@ -51,10 +53,11 @@ $inactiveIcon = 'text-gray-400 group-hover:text-primary';
             <!-- Main Menu -->
             <div class="space-y-1">
                 <?php $isDash = ($curr === '' || $curr === '/'); ?>
-                <a href="<?php echo url(); ?>"
+                <a href="<?php echo url(); ?>" <?php echo $isDash ? 'aria-current="page"' : ''; ?>
+                    aria-label="Dashboard"
                     class="relative flex items-center px-4 py-3 text-sm font-bold rounded-2xl transition-all group <?php echo $isDash ? $activeClass : $inactiveClass; ?>">
-                    <i
-                        class="fas fa-th-large w-6 text-center mr-4 group-hover:scale-110 transition-transform <?php echo $isDash ? $activeIcon : $inactiveIcon; ?>"></i>
+                    <i class="fas fa-th-large w-6 text-center mr-4 group-hover:scale-110 transition-transform <?php echo $isDash ? $activeIcon : $inactiveIcon; ?>"
+                        aria-hidden="true"></i>
                     <span class="sidebar-expand-only">Dashboard</span>
                     <span class="sidebar-tooltip">Dashboard</span>
                     <?php if ($isDash): ?>
@@ -103,10 +106,10 @@ $inactiveIcon = 'text-gray-400 group-hover:text-primary';
                                 continue;
                             $t = $tools[$slug];
                             ?>
-                            <a href="<?php echo getToolUrl($slug, $t); ?>"
+                            <a href="<?php echo getToolUrl($slug, $t); ?>" aria-label="Recent tool: <?php echo $t['name']; ?>"
                                 class="relative flex items-center px-4 py-2.5 text-xs font-bold text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl group transition-all">
-                                <i
-                                    class="fas <?php echo $t['icon']; ?> w-6 text-center mr-4 text-primary/40 group-hover:text-primary transition-colors"></i>
+                                <i class="fas <?php echo $t['icon']; ?> w-6 text-center mr-4 text-primary/40 group-hover:text-primary transition-colors"
+                                    aria-hidden="true"></i>
                                 <span class="sidebar-expand-only line-clamp-1"><?php echo $t['name']; ?></span>
                                 <span class="sidebar-tooltip"><?php echo $t['name']; ?></span>
                             </a>
@@ -129,10 +132,11 @@ $inactiveIcon = 'text-gray-400 group-hover:text-primary';
                         $iconClass = $cat['icon'] ?? 'fa-cube';
                         $isActive = isActiveCat($id, $parts);
                         ?>
-                        <a href="<?php echo url('tools/' . $id); ?>"
+                        <a href="<?php echo url('tools/' . $id); ?>" <?php echo $isActive ? 'aria-current="page"' : ''; ?>
+                            aria-label="Category: <?php echo $name; ?>"
                             class="relative flex items-center px-4 py-3 text-sm font-bold rounded-2xl transition-all group <?php echo $isActive ? $activeClass : $inactiveClass; ?>">
-                            <i
-                                class="fas <?php echo $iconClass; ?> w-6 text-center mr-4 group-hover:scale-110 transition-transform <?php echo $isActive ? $activeIcon : $inactiveIcon; ?>"></i>
+                            <i class="fas <?php echo $iconClass; ?> w-6 text-center mr-4 group-hover:scale-110 transition-transform <?php echo $isActive ? $activeIcon : $inactiveIcon; ?>"
+                                aria-hidden="true"></i>
                             <span class="sidebar-expand-only"><?php echo $name; ?></span>
                             <span class="sidebar-tooltip"><?php echo $name; ?></span>
                             <?php if ($isActive): ?>
